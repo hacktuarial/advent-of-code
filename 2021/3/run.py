@@ -7,16 +7,39 @@ ONE = "1"
 ZERO = "0"
 
 
+def swap_bit(x):
+    if x == ONE:
+        return ZERO
+    elif x == ZERO:
+        return ONE
+    else:
+        raise ValueError(x)
+
+
+def count_values(lines, i) -> Counter:
+    return Counter([line[i] for line in lines])
 
 def most_common(lines, i: int) -> str:
-    chars = [line[i] for line in lines]
-    c = Counter(chars)
-    # assert set(c.keys()) == {"0", "1"}, c.keys()
-    if c[ZERO] > c[ONE]:
+    c = count_values(lines, i)
+    if c[ZERO] > c[ONE]: # counter defaults to 0 for unseen values
         return ZERO
     else:
         # in case of tie, return 1
         return ONE
+
+def least_common(lines, i):
+    c = count_values(lines, i)
+    if c[ONE] < c[ZERO]:  # counter defaults to 0 for unseen values
+        return ONE
+    else:
+        # default to 0
+        return ZERO
+
+
+assert most_common([], 0) == ONE
+assert least_common([], 0) == ZERO
+
+
 
 def get_gamma(lines) -> str:
     n = len(lines[0])
@@ -48,6 +71,21 @@ def get_oxygen(lines) -> str:
         filtered_lines = [line for line in filtered_lines if line[i] == bit]
     return oxygen
 
+def get_co2_scrubbing(lines):
+    answer = ""
+    n = len(lines[0])
+    filtered_lines = lines[:]
+    for i in range(n):
+        bit = least_common(filtered_lines, i)
+        answer += bit
+        filtered_lines = [line for line in filtered_lines if line[i] == bit]
+        if len(filtered_lines) == 1:
+            line = filtered_lines[0]
+            return answer + line[i+1:]
+
+
+
+
 def run(fname, part=2):
     with open(fname, "rb") as f:
         all_lines = f.readlines()
@@ -66,7 +104,14 @@ def run(fname, part=2):
             assert answer == 3912944
     else:
         oxygen = get_oxygen(all_lines)
-        assert binary_to_int(oxygen) == 23, oxygen
+        co2_scrubbing = get_co2_scrubbing(all_lines)
+        if "sample" in fname:
+            assert binary_to_int(oxygen) == 23, oxygen
+            assert binary_to_int(co2_scrubbing) == 10, co2_scrubbing
+        else:
+            oxygen = binary_to_int(oxygen)
+            co2 = binary_to_int(co2_scrubbing)
+            print(oxygen * co2)
 
 
 if __name__ == "__main__":
