@@ -61,29 +61,22 @@ def get_epsilon(gamma: str) -> str:
     return "".join([str(b) for b in bits])
 
 
-def get_oxygen(lines) -> str:
+def get_oxygen(lines,swap=False) -> str:
     oxygen = ""
     n = len(lines[0])
     filtered_lines = lines[:]
     for i in range(n):
         bit = most_common(filtered_lines, i)
+        if swap:
+            bit = swap_bit(bit)
         oxygen += bit
-        filtered_lines = [line for line in filtered_lines if line[i] == bit]
-    return oxygen
-
-def get_co2_scrubbing(lines):
-    answer = ""
-    n = len(lines[0])
-    filtered_lines = lines[:]
-    for i in range(n):
-        bit = least_common(filtered_lines, i)
-        answer += bit
         filtered_lines = [line for line in filtered_lines if line[i] == bit]
         if len(filtered_lines) == 1:
             line = filtered_lines[0]
-            return answer + line[i+1:]
+            return oxygen + line[i + 1:]
 
 
+get_co2_scrubbing = lambda x: get_oxygen(x, swap=True)
 
 
 def run(fname, part=2):
@@ -111,7 +104,7 @@ def run(fname, part=2):
         else:
             oxygen = binary_to_int(oxygen)
             co2 = binary_to_int(co2_scrubbing)
-            print(oxygen * co2)
+            assert 4996233 == oxygen * co2
 
 
 if __name__ == "__main__":
