@@ -19,13 +19,15 @@ def swap_bit(x):
 def count_values(lines, i) -> Counter:
     return Counter([line[i] for line in lines])
 
+
 def most_common(lines, i: int) -> str:
     c = count_values(lines, i)
-    if c[ZERO] > c[ONE]: # counter defaults to 0 for unseen values
+    if c[ZERO] > c[ONE]:  # counter defaults to 0 for unseen values
         return ZERO
     else:
         # in case of tie, return 1
         return ONE
+
 
 def least_common(lines, i):
     c = count_values(lines, i)
@@ -40,7 +42,6 @@ assert most_common([], 0) == ONE
 assert least_common([], 0) == ZERO
 
 
-
 def get_gamma(lines) -> str:
     n = len(lines[0])
     output: List[str] = ["-"] * n
@@ -48,20 +49,22 @@ def get_gamma(lines) -> str:
         output[i] = most_common(lines, i)
     return "".join(output)
 
+
 def binary_to_int(binary: str) -> int:
     n = len(binary)
-    return sum([int(b) * 2**(n-i-1) for i, b in enumerate(binary)])
+    return sum([int(b) * 2 ** (n - i - 1) for i, b in enumerate(binary)])
 
 
-assert binary_to_int('10110') == 22, binary_to_int('10110')
-assert binary_to_int('01001') == 9
+assert binary_to_int("10110") == 22, binary_to_int("10110")
+assert binary_to_int("01001") == 9
+
 
 def get_epsilon(gamma: str) -> str:
     bits = [1 - int(g) for g in gamma]
     return "".join([str(b) for b in bits])
 
 
-def get_oxygen(lines,swap=False) -> str:
+def get_oxygen(lines, swap=False) -> str:
     oxygen = ""
     n = len(lines[0])
     filtered_lines = lines[:]
@@ -73,7 +76,7 @@ def get_oxygen(lines,swap=False) -> str:
         filtered_lines = [line for line in filtered_lines if line[i] == bit]
         if len(filtered_lines) == 1:
             line = filtered_lines[0]
-            return oxygen + line[i + 1:]
+            return oxygen + line[i + 1 :]
 
 
 get_co2_scrubbing = lambda x: get_oxygen(x, swap=True)
@@ -109,6 +112,3 @@ def run(fname, part=2):
 
 if __name__ == "__main__":
     fire.Fire(run)
-
-
-
