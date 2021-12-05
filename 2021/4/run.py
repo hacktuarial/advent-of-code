@@ -6,6 +6,7 @@ from board import Board
 
 DIM = 5
 
+
 def load_boards(lines):
     boards = []
     rows = []
