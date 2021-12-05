@@ -29,15 +29,24 @@ def load(fname):
     numbers = all_lines.pop(0).split(",")
     numbers = [int(n) for n in numbers]
     boards = load_boards(all_lines)
+    n_boards = len(boards)
+    has_won = [False] * len(boards)
     for number in numbers:
-        for board in boards:
-            board.mark(number)
+        for b in range(n_boards):
+            board = boards[b]
+            boards[b].mark(number)
             if board.has_won():
-                print("This board won!")
-                if "sample" in fname:
-                    assert number*board.tally() == 4512
-                sys.exit(0)
+                # is it the last one?
+                is_last = all([has_won[c] for c in range(n_boards) if c != b])
+                if is_last:
+                    print("This board won last")
+                    print(number * board.tally())
+                    if "sample" in fname:
+                        assert number * board.tally() == 1924
+                    sys.exit(0)
+                else:
+                    has_won[b] = True
 
 
 if __name__ == "__main__":
-    load("sample_input.txt")
+    load(sys.argv[1])
