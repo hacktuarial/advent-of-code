@@ -18,7 +18,7 @@ function isLowPoint(mat::Array, i::Int, j::Int):: Bool
     neighbors = getNeighbors(i, j, size(mat, 1), size(mat, 2))
     lowPoint = true
     for neighbor in neighbors
-        lowPoint = lowPoint && (mat[i, j] < mat[neighbor[1], neighbor[2]])
+        lowPoint = lowPoint && (mat[i, j] < mat[neighbor...])
     end
     lowPoint
 end
@@ -66,7 +66,7 @@ function basinSize(mat::Matrix{Int}, startRow::Int, startCol::Int)
     queue = [(startRow, startCol)]
     while length(queue) > 0
         v = popfirst!(queue)
-        for neighbor in getNeighbors(v[1], v[2], size(mat, 1), size(mat, 2))
+        for neighbor in getNeighbors(v..., size(mat)...)
             if visited[neighbor...] == 0
                 visited[neighbor...] = 1
                 if mat[neighbor...] < 9
