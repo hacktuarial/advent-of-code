@@ -1,6 +1,27 @@
 from typing import List, Tuple
 from functools import partial
+from itertools import permutations
 
+
+class Translation:
+    letters = "abcdefg"
+    def __init__(self, letters):
+        # encrypted -> decrypted
+        self.translation: dict = dict(zip(letters, self.letters))
+        self.letters = tuple(letters)
+
+    def __hash__(self):
+        return hash(self.letters)
+
+    def __getitem__(self, key):
+        # behaves like a dictionary
+        return self.translation[key]
+
+    def __eq__(self, other):
+        return self.letters == other.letters
+
+    def __str__(self):
+        return "".join(self.letters)
 
 def check(entry, translation, decrypted):
     lengths = [len(seg) for seg in entry]
@@ -13,39 +34,38 @@ check_seven = lambda x, y: check(x, y, set("acf"))
 check_eight = lambda x, y: check(x, y, set("abcdefg"))
 
 
-def check_four(entry, translation):
-    lengths = [len(seg) for seg in entry]
-    decrypted = set("bcdf")
-    encrypted = entry[lengths.index(len(decrypted))]
-    return decrypted == set((translation[e] for e in encrypted))
-
-def check_seven(entry, translation):
-    lengths = [len(seg) for seg in entry]
-    decrypted = set("acf")
-    encrypted = entry[lengths.index(len(decrypted))]
-    return decrypted == set((translation[e] for e in encrypted))
-
-def check_eight(entry, translation):
-    lengths = [len(seg) for seg in entry]
-    decrypted = set("abcdefg")
-    encrypted = entry[lengths.index(len(decrypted))]
-    return decrypted == set((translation[e] for e in encrypted))
-
-def is_possible(entry: List[str], translation: dict):
-    assert set(translation.keys()) == set(translation.values())
-    assert set(translation.keys()) == set("abcdefg")
+def is_possible(entry: List[str], translation: Translation):
     return check_one(entry, translation) and check_four(entry, translation) and \
 check_seven(entry, translation) and check_eight(entry, translation)
 
+def part2(line):
+    # breadth first search of possible solutions
+    queue = []
+    visited = dict()
+    # find a starting point
+    for root in permutations(Translation.letters):
+        solution = Translation(root)
+        if is_possible(line, solution):
+            break
+    visited[solution] = True
+    queue.append(solution)
+    while len(queue) > 0:
+        v = queue.pop(0)
+
+
+def brute_force(line):
+    for perm in permutations(Translation.letters):
+        t = Translation(perm)
+        if is_possible(line, t):
+            return t
 
 one_line = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab".split()
-solution = {"d": "a", "e": "b", "a": "c", "f": "d", "g": "e", "b": "f", "c": "g"}
+solution = Translation("deafgbc")
 assert is_possible(one_line, solution)
-bad_solution = {"d": "b", "e": "a", "a": "c", "f": "d", "g": "e", "b": "f", "c": "g"}
+bad_solution = Translation("aedfgcb")
 assert not is_possible(one_line, bad_solution)
 
 
-def part2(lines):
 
 
 def part1(lines):
@@ -63,3 +83,5 @@ def part1(lines):
 with open("input.txt", "r") as f:
     lines = f.readlines()
     part1(lines)
+
+assert brute_force(one_line) == solution, brute_force(one_line)
