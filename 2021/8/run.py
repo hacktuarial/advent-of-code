@@ -5,21 +5,22 @@ from itertools import permutations
 from enum import Enum
 
 DIGITS = [
-    set("abcefg"), # 0
-set("cf"), # 1
-    set("acdeg"), # 2
-    set("acdfg"), # 3
-    set("bcdf"), # 4
-    set("abdfg"), # 5
-    set("abdefg"), # 6
-    set("acf"), # 7
-    set("abcdefg"), # 8
-    set("abcdfg"), # 9
+    set("abcefg"),  # 0
+    set("cf"),  # 1
+    set("acdeg"),  # 2
+    set("acdfg"),  # 3
+    set("bcdf"),  # 4
+    set("abdfg"),  # 5
+    set("abdefg"),  # 6
+    set("acf"),  # 7
+    set("abcdefg"),  # 8
+    set("abcdfg"),  # 9
 ]
 
 
 class Translation:
     letters = "abcdefg"
+
     def __init__(self, letters):
         # encrypted -> decrypted
         self.translation: dict = dict(zip(letters, self.letters))
@@ -41,6 +42,7 @@ class Translation:
     def __str__(self):
         return "".join(self.letters)
 
+
 def check(entry, translation, decrypted):
     lengths = [len(seg) for seg in entry]
     try:
@@ -49,17 +51,22 @@ def check(entry, translation, decrypted):
         return True
     return decrypted == set((translation[e] for e in encrypted))
 
+
 check_one = lambda x, y: check(x, y, set("cf"))
 check_four = lambda x, y: check(x, y, set("bcdf"))
 check_seven = lambda x, y: check(x, y, set("acf"))
 check_eight = lambda x, y: check(x, y, set("abcdefg"))
 
 
-
 def is_possible(entry: List[str], translation: Translation):
     all_valid = all(translation.translate(ent) in DIGITS for ent in entry)
-    return all_valid and check_one(entry, translation) and check_four(entry, translation) and check_seven(entry, translation) and check_eight(entry, translation)
-
+    return (
+        all_valid
+        and check_one(entry, translation)
+        and check_four(entry, translation)
+        and check_seven(entry, translation)
+        and check_eight(entry, translation)
+    )
 
 
 def brute_force(line):
@@ -69,14 +76,13 @@ def brute_force(line):
             return t
     raise ValueError(f"No solution found for {line}")
 
+
 one_line = "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab".split()
 solution = Translation("deafgbc")
 assert solution.translate("ab") == set("cf"), solution.translate("ab")
 assert is_possible(one_line, solution)
 bad_solution = Translation("aedfgcb")
 assert not is_possible(one_line, bad_solution)
-
-
 
 
 def part1(lines):
