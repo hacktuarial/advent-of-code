@@ -59,19 +59,42 @@ function computeRiskLevel(mat::Matrix{Int}, points)
 end
 
 
-# function breadthFirstSearch(mat::Matrix{Int}, startRow::Int, startCol::Int)
-#     visited = zeros(Int8, shape(mat))
-#     # todo use boolean instead
-#     visited[startRow, startCol] = 1
-#     queue = [(startRow, startCol)]
-#     while length(queue) > 0
-#         v = popfirst!(queue)
+function basinSize(mat::Matrix{Int}, startRow::Int, startCol::Int)
+    basinSize = 1
+    visited = zeros(Int8, size(mat))
+    visited[startRow, startCol] = 1
+    queue = [(startRow, startCol)]
+    while length(queue) > 0
+        v = popfirst!(queue)
+        for neighbor in getNeighbors(v[1], v[2], size(mat, 1), size(mat, 2))
+            if visited[neighbor[1], neighbor[2]] == 0
+                visited[neighbor[1], neighbor[2]] = 1
+                if mat[neighbor[1], neighbor[2]] < 9
+                    basinSize += 1
+                    queue = push!(queue, neighbor)
+                end
+            end
+        end
+    end
+    basinSize
+end
 
+
+function part2(mat)
+    lowPoints = findLowPoints(mat)
+    basins = map(point -> basinSize(mat, point[1], point[2]), lowPoints)
+    basins = sort(basins)
+    # https://julia.school/julia/arrays/#how-to-get-the-last-n-items-in-an-array-in-julia
+    reduce((x, y) -> x * y, last(basins, 3))
+end
 
 
 open("sample_input.txt", "r") do f
     mat = read_input_string(read(f, String))
     @assert computeRiskLevel(mat, findLowPoints(mat)) == 15
+    @assert basinSize(mat, 1, 1) == 3
+    @assert basinSize(mat, 1, 10) == 9
+    @assert part2(mat) == 1134
 end
     
 
@@ -80,4 +103,5 @@ end
 open("input.txt", "r") do f
     mat = read_input_string(read(f, String))
     @assert 548 == computeRiskLevel(mat, findLowPoints(mat))
+    println(part2(mat))
 end
