@@ -1,11 +1,26 @@
 
 
+function getNeighbors(row, col, lastRow, lastCol)
+    neighbors = []
+    steps = [-1, 1]
+    for step in steps
+        if 1 <= row + step <= lastRow
+            neighbors = push!(neighbors, (row + step, col))
+        end
+        if 1 <= col + step <= lastCol
+            neighbors = push!(neighbors, (row, col + step))
+        end
+    end
+    neighbors
+end
+
 function isLowPoint(mat::Array, i::Int, j::Int):: Bool
-    lessThanLeft = (j == 1) || (mat[i, j-1] > mat[i, j])
-    lessThanRight = (j == size(mat, 2)) || (mat[i, j+1] > mat[i, j])
-    lessThanAbove = (i==1) || (mat[i-1, j] > mat[i, j])
-    lessThanBelow = (i==size(mat, 1)) || (mat[i+1, j] > mat[i, j])
-    lessThanLeft && lessThanRight && lessThanAbove && lessThanBelow
+    neighbors = getNeighbors(i, j, size(mat, 1), size(mat, 2))
+    lowPoint = true
+    for neighbor in neighbors
+        lowPoint = lowPoint && (mat[i, j] < mat[neighbor[1], neighbor[2]])
+    end
+    lowPoint
 end
 
 @assert 1 == 1
@@ -44,6 +59,15 @@ function computeRiskLevel(mat::Matrix{Int}, points)
 end
 
 
+# function breadthFirstSearch(mat::Matrix{Int}, startRow::Int, startCol::Int)
+#     visited = zeros(Int8, shape(mat))
+#     # todo use boolean instead
+#     visited[startRow, startCol] = 1
+#     queue = [(startRow, startCol)]
+#     while length(queue) > 0
+#         v = popfirst!(queue)
+
+
 
 open("sample_input.txt", "r") do f
     mat = read_input_string(read(f, String))
@@ -55,5 +79,5 @@ end
 
 open("input.txt", "r") do f
     mat = read_input_string(read(f, String))
-    println(computeRiskLevel(mat, findLowPoints(mat)))
+    @assert 548 == computeRiskLevel(mat, findLowPoints(mat))
 end
