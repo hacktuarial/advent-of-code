@@ -23,8 +23,6 @@ function isLowPoint(mat::Array, i::Int, j::Int):: Bool
     lowPoint
 end
 
-@assert 1 == 1
-
 function read_input_string(in::String)
     rows = filter(row -> length(row) > 0, split(in, "\n"))
     n_cols = length(rows[1])
@@ -40,6 +38,7 @@ end
 
 function findLowPoints(mat::Matrix{Int})
     points = []
+    # can probably use a generator expression here
     for row=1:size(mat, 1)
         for col=1:size(mat, 2)
             if isLowPoint(mat, row, col)
@@ -53,13 +52,14 @@ end
 function computeRiskLevel(mat::Matrix{Int}, points)
     riskLevel = 0
     for point in points
-        riskLevel += 1 + mat[point[1], point[2]]
+        riskLevel += 1 + mat[point...]
     end
     return riskLevel
 end
 
 
 function basinSize(mat::Matrix{Int}, startRow::Int, startCol::Int)
+    """Breadth-first search from this starting point"""
     basinSize = 1
     visited = zeros(Int8, size(mat))
     visited[startRow, startCol] = 1
@@ -67,9 +67,9 @@ function basinSize(mat::Matrix{Int}, startRow::Int, startCol::Int)
     while length(queue) > 0
         v = popfirst!(queue)
         for neighbor in getNeighbors(v[1], v[2], size(mat, 1), size(mat, 2))
-            if visited[neighbor[1], neighbor[2]] == 0
-                visited[neighbor[1], neighbor[2]] = 1
-                if mat[neighbor[1], neighbor[2]] < 9
+            if visited[neighbor...] == 0
+                visited[neighbor...] = 1
+                if mat[neighbor...] < 9
                     basinSize += 1
                     queue = push!(queue, neighbor)
                 end
@@ -82,7 +82,8 @@ end
 
 function part2(mat)
     lowPoints = findLowPoints(mat)
-    basins = map(point -> basinSize(mat, point[1], point[2]), lowPoints)
+    # splat point per https://docs.julialang.org/en/v1/manual/functions/
+    basins = map(point -> basinSize(mat, point...), lowPoints)
     basins = sort(basins)
     # https://julia.school/julia/arrays/#how-to-get-the-last-n-items-in-an-array-in-julia
     reduce((x, y) -> x * y, last(basins, 3))
