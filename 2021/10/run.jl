@@ -46,7 +46,8 @@ function findCorruptCharacter(chunk::String)
             end
         end
     end
-    # if you get to the end, and there's nothing left, it's valid
+    # if stack is empty, chunk is valid
+    # otherwise, chunk is incomplete
     return stack
 end
 
@@ -85,23 +86,19 @@ end
 @assert findCorruptCharacter("[[<[([]))<([[{}[[()]]]") == ')'
 
 
-# part1
-open("sample_input.txt", "r") do f
-    lines = filter(isCorrupted, readlines(f))
-    corrupted = map(findCorruptCharacter, lines)
-    total = reduce((x, y) -> x+y, map(score, corrupted))
-    @assert total == 26397
-end
-
-open("input.txt", "r") do f
-    lines = filter(isCorrupted, readlines(f))
-    corrupted = map(findCorruptCharacter, lines)
-    total = reduce((x, y) -> x+y, map(score, corrupted))
-    @assert total == 392421
+function part1(fname::String)::Int
+    open(fname, "r") do f
+        lines = filter(isCorrupted, readlines(f))
+        corrupted = map(findCorruptCharacter, lines)
+        total = reduce((x, y) -> x+y, map(score, corrupted))
+        total
+    end
 end
 
 
-# part2
+@assert part1("sample_input.txt") == 26397
+@assert part1("input.txt") == 392421
+
 
 function scoreCompletionString(string::String)::Int
     char_scores = Dict(')'=>1, ']'=>2, '}'=>3, '>'=>4)
@@ -128,19 +125,14 @@ end
 @assert makeCompletionString(['(', '{']) == "})"
 
 
-open("sample_input.txt", "r") do f
-    lines = filter(isIncomplete, readlines(f))
-    stacks = map(findCorruptCharacter, lines)
-    completions  = map(makeCompletionString, stacks)
-    scores = map(scoreCompletionString, completions)
-    @assert median(scores) == 288957
+function part2(fname::String)
+    open(fname, "r") do f
+        lines = filter(isIncomplete, readlines(f))
+        stacks = map(findCorruptCharacter, lines)
+        completions  = map(makeCompletionString, stacks)
+        scores = map(scoreCompletionString, completions)
+        return median(scores)
+    end
 end
-
-open("input.txt", "r") do f
-    lines = filter(isIncomplete, readlines(f))
-    stacks = map(findCorruptCharacter, lines)
-    completions  = map(makeCompletionString, stacks)
-    scores = map(scoreCompletionString, completions)
-    @assert median(scores) == 2769449099 
-    # @printf "%d" median(scores)
-end
+@assert part2("sample_input.txt") == 288957
+@assert part2("input.txt") == 2769449099 
