@@ -27,20 +27,18 @@ function find(arr, elt)::Int
 end
 
 function isValid(chunk::String)::Bool
-    open_chars = ['(', '{', '[', '<']
+    open_chars =  ['(', '{', '[', '<']
     close_chars = [')', '}', ']', '>']
-    stacks::Array{Array{Char}} = [[], [], [], []]
+    stack:: Array{Char} = []
     for c::Char in chunk
         if c in open_chars
-            index = find(open_chars, c)
-            stacks[index] = push!(stacks[index], c)
+            stack = push!(stack, c)
         else
             # it's a closing character. figure out which one
-            index = find(close_chars, c)
             try
-                d = pop!(stacks[index])
+                d = pop!(stack)
                 # close must have matching open
-                if d != open_chars[index]
+                if find(open_chars, d) != find(close_chars, c)
                     return false
                 end
             catch LoadError
@@ -49,7 +47,7 @@ function isValid(chunk::String)::Bool
         end
     end
     # if you get to the end, and there's nothing left, it's valid
-    return all(length(stack) == 0 for stack in stacks)
+    return length(stack) == 0
 end
 
 @assert isValid("()")
