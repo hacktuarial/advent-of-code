@@ -1,4 +1,5 @@
-
+# import Pkg; Pkg.add("Pipe")
+using Pipe
 using Statistics
 using Printf
 
@@ -127,11 +128,12 @@ end
 
 function part2(fname::String)
     open(fname, "r") do f
-        lines = filter(isIncomplete, readlines(f))
-        stacks = map(findCorruptCharacter, lines)
-        completions  = map(makeCompletionString, stacks)
-        scores = map(scoreCompletionString, completions)
-        return median(scores)
+        @pipe readlines(f) |> 
+        filter(isIncomplete, _) |>
+        map(findCorruptCharacter, _) |>
+        map(makeCompletionString, _) |>
+        map(scoreCompletionString, _) |>
+        median
     end
 end
 @assert part2("sample_input.txt") == 288957
