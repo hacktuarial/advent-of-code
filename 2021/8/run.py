@@ -1,8 +1,18 @@
 from typing import List, Tuple
-from functools import partial
+from functools import partial, lru_cache
 from itertools import permutations
-
 from enum import Enum
+
+import numpy as np
+
+
+@lru_cache(maxsize=100)
+def factorial(n):
+    if n == 1:
+        return 1
+    else:
+        return n * factorial(n - 1)
+
 
 DIGITS = [
     set("abcefg"),  # 0
@@ -19,11 +29,11 @@ DIGITS = [
 
 
 class Translation:
-    letters = "abcdefg"
+    all_letters = "abcdefg"
 
     def __init__(self, letters):
         # encrypted -> decrypted
-        self.translation: dict = dict(zip(letters, self.letters))
+        self.translation: dict = dict(zip(letters, self.all_letters))
         self.letters = tuple(letters)
 
     def translate(self, string):
@@ -70,10 +80,13 @@ def is_possible(entry: List[str], translation: Translation):
 
 
 def brute_force(line):
-    for perm in permutations(Translation.letters):
+    n_attempts = 0
+    for perm in np.random.permutation(list(permutations(Translation.all_letters))):
         t = Translation(perm)
+        n_attempts += 1
         if is_possible(line, t):
             return t
+    assert n_attempts == factorial(7)
     raise ValueError(f"No solution found for {line}")
 
 
@@ -85,6 +98,17 @@ bad_solution = Translation("aedfgcb")
 assert not is_possible(one_line, bad_solution)
 
 
+# another example for part2
+line2 = "be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb".split()
+assert brute_force(line2).translate("fdgacbe") == DIGITS[8]
+assert brute_force(line2).translate("cefdb") == DIGITS[3]
+assert brute_force(line2).translate("cefbgd") == DIGITS[9]
+assert brute_force(line2).translate("gcbe") == DIGITS[4]
+
+line3 = "edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec".split()
+assert brute_force(line3).translate("fcgedb") == DIGITS[9]
+
+
 def part1(lines):
     special_lengths = {2, 3, 4, 7}
     count = 0
@@ -94,19 +118,22 @@ def part1(lines):
             if len(word) in special_lengths:
                 count += 1
     # assert count == 26
-    print(count)
+    # print(count)
 
 
-with open("input.txt", "r") as f:
-    lines = f.readlines()
-    part1(lines)
-    part2 = 0
-    for line in lines:
-        left, right = line.split("|")
-        solution = brute_force(left)
-        for secret in right.split():
-            decoded = solution.translate(secret)
-            part2 += DIGITS.index(decoded)
-    print(part2)
+assert brute_force(one_line) == solution, brute_force(one_line)
 
-# assert brute_force(one_line) == solution, brute_force(one_line)
+if __name__ == "__main__":
+    with open("input.txt", "r") as f:
+        lines = f.readlines()
+        part1(lines)
+        part2 = 0
+        print(len(lines))
+        for line in lines:
+            left, right = line.split("|")
+            left = left.strip()
+            solution = brute_force(left.split())
+            for i, secret in enumerate(right.split()):
+                decoded = solution.translate(secret)
+                part2 += DIGITS.index(decoded) * (10 ** (3 - i))
+        assert part2 == 61_229, part2
