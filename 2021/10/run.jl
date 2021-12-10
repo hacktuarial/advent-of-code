@@ -1,5 +1,6 @@
 
-using Statistics;
+using Statistics
+using Printf
 
 function score(char::Char)::Int
     if char == ')'
@@ -140,6 +141,6 @@ open("input.txt", "r") do f
     stacks = map(findCorruptCharacter, lines)
     completions  = map(makeCompletionString, stacks)
     scores = map(scoreCompletionString, completions)
-    # @assert median(scores) == 288957
-    println(median(scores))
+    @assert median(scores) == 2769449099 
+    # @printf "%d" median(scores)
 end
