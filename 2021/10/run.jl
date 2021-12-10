@@ -89,10 +89,11 @@ end
 
 function part1(fname::String)::Int
     open(fname, "r") do f
-        lines = filter(isCorrupted, readlines(f))
-        corrupted = map(findCorruptCharacter, lines)
-        total = reduce((x, y) -> x+y, map(score, corrupted))
-        total
+        @pipe readlines(f) |>
+        filter(isCorrupted, _) |>
+        map(findCorruptCharacter, _) |>
+        map(score, _) |>
+        reduce((x, y) -> x+y, _)
     end
 end
 
