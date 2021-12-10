@@ -1,4 +1,5 @@
 
+using Statistics;
 
 function score(char::Char)::Int
     if char == ')'
@@ -15,8 +16,6 @@ function score(char::Char)::Int
 end
     
 
-@assert score(']') == 57
-
 function find(arr, elt)::Int
     for (i, a) in enumerate(arr)
         if a == elt
@@ -26,8 +25,7 @@ function find(arr, elt)::Int
     return -1
 end
 
-function isValid(chunk::String)
-    empty_char::Char = 'z'
+function findCorruptCharacter(chunk::String)
     open_chars::Array{Char} =  ['(', '{', '[', '<']
     close_chars ::Array{Char}= [')', '}', ']', '>']
     stack:: Array{Char} = []
@@ -48,32 +46,100 @@ function isValid(chunk::String)
         end
     end
     # if you get to the end, and there's nothing left, it's valid
-    return empty_char
+    return stack
 end
 
-@assert isValid("()") == 'z'
-@assert isValid("(())") == 'z'
-@assert isValid("(((") == 'z'
-# @assert isValid(")")
-@assert isValid("(((((((((())))))))))") == 'z'
+function isValid(chunk::String)::Bool
+    c = findCorruptCharacter(chunk)
+    if c isa Char
+        return false
+    elseif c isa Array{Char}
+        return length(c) == 0
+    end
+end
 
-@assert isValid("([])") == 'z'
-@assert isValid("([]{}<>)") == 'z'
+function isCorrupted(chunk::String)::Bool
+    c = findCorruptCharacter(chunk)
+    c isa Char
+end
 
-@assert isValid("{([(<{}[<>[]}>{[]{[(<()>") == '}'
-@assert isValid("[[<[([]))<([[{}[[()]]]") == ')'
+function isIncomplete(chunk::String)::Bool
+    c = findCorruptCharacter(chunk)
+    if c isa Char
+        return false
+    elseif c isa Array{Char}
+        return length(c) > 0
+    end
+end
+
+@assert isValid("()")
+@assert isValid("(())")
+@assert isIncomplete("(((")
+@assert isValid("(((((((((())))))))))")
+
+@assert isValid("([])")
+@assert isValid("([]{}<>)")
+
+@assert findCorruptCharacter("{([(<{}[<>[]}>{[]{[(<()>") == '}'
+@assert findCorruptCharacter("[[<[([]))<([[{}[[()]]]") == ')'
 
 
+# part1
 open("sample_input.txt", "r") do f
-    lines = readlines(f)
-    corrupted = map(isValid, lines)
+    lines = filter(isCorrupted, readlines(f))
+    corrupted = map(findCorruptCharacter, lines)
     total = reduce((x, y) -> x+y, map(score, corrupted))
     @assert total == 26397
 end
 
 open("input.txt", "r") do f
-    lines = readlines(f)
-    corrupted = map(isValid, lines)
+    lines = filter(isCorrupted, readlines(f))
+    corrupted = map(findCorruptCharacter, lines)
     total = reduce((x, y) -> x+y, map(score, corrupted))
-    println(total)
+    @assert total == 392421
+end
+
+
+# part2
+
+function scoreCompletionString(string::String)::Int
+    char_scores = Dict(')'=>1, ']'=>2, '}'=>3, '>'=>4)
+    score = 0
+    for c::Char in string
+        score = 5 * score + char_scores[c]
+    end
+    score
+end
+
+@assert scoreCompletionString("}}]])})]") == 288957
+
+function makeCompletionString(stack::Array{Char})
+    result::Array{Char} = []
+    open_chars::Array{Char} =  ['(', '{', '[', '<']
+    close_chars ::Array{Char}= [')', '}', ']', '>']
+    while length(stack) > 0
+        index = find(open_chars, pop!(stack))
+        result = push!(result, close_chars[index])
+    end
+    join(result)
+end
+
+@assert makeCompletionString(['(', '{']) == "})"
+
+
+open("sample_input.txt", "r") do f
+    lines = filter(isIncomplete, readlines(f))
+    stacks = map(findCorruptCharacter, lines)
+    completions  = map(makeCompletionString, stacks)
+    scores = map(scoreCompletionString, completions)
+    @assert median(scores) == 288957
+end
+
+open("input.txt", "r") do f
+    lines = filter(isIncomplete, readlines(f))
+    stacks = map(findCorruptCharacter, lines)
+    completions  = map(makeCompletionString, stacks)
+    scores = map(scoreCompletionString, completions)
+    # @assert median(scores) == 288957
+    println(median(scores))
 end
