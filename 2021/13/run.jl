@@ -1,4 +1,3 @@
-using DelimitedFiles
 function parseNumbers(xy::String, delimiter::Char=',')
     (x, y) = split(xy, delimiter)
     [parse(Int, x), parse(Int, y)]
@@ -8,14 +7,31 @@ function isDot(line::String)::Bool
     match(r"[0-9]+,[0-9]+", line) !== nothing
 end
 
+function createDotMatrix(dots)
+    dim = maximum(map(maximum, dots)) + 1
+    dot_matrix = zeros(Int, (dim, dim))
+    for (col, row) in dots
+        # julia starts indexing at 1 :)
+        col += 1
+        row += 1
+        dot_matrix[row, col] = 1
+    end
+    dot_matrix
+end
+
 function readInput(fname::String)
-    dots = readdlm("dots.txt", ',', Int)
-    map(println, dots)
-    open("folds.txt", "r") do f
-        folds = map(line -> match(r"[xy]=[0-9]+", line).match, readlines(f))
-        map(println, folds)
+    open(fname, "r") do f
+        lines = readlines(f)
+        dots = filter(isDot, lines)
+        # folds = filter(line -> ! isDot(line), lines)
+        dots = map(parseNumbers, dots)
+        return dots
     end
 end
 
+function part1(fname::String)
+    dot_matrix = createDotMatrix(readInput(fname))
+    println(dot_matrix)
+end
 
-parse("sample.txt")
+part1("sample.txt")
