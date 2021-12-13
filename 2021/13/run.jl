@@ -104,7 +104,7 @@ function prettyPrint(arr)
     open("result.txt", "w") do f
         for i=1:size(arr, 1)
             for j=1:size(arr, 2)
-                if arr[i, j] >= 0
+                if arr[i, j] > 0
                     write(f, '#')
                 else
                     write(f, '.')
