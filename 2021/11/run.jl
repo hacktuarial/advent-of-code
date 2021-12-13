@@ -6,13 +6,7 @@ function getNeighbors(row, col, lastRow, lastCol)
             if row_step == 0 && col_step == 0
                 continue
             end
-            if 1 <= row + row_step <= lastRow
-                # include diagonal
-                neighbors = push!(neighbors, (row + row_step, col))
-            end
-            if 1 <= col + col_step <= lastCol
-                neighbors = push!(neighbors, (row , col+ col_step))
-            end
+            neighbors = push!(neighbors, (row + row_step, col + col_step))
         end
     end
     neighbors
@@ -31,54 +25,43 @@ function read_input_string(in::String)::Array{Int}
     mat
 end
 
-function increment(energy::Int)
-    if energy < 9
-        return (energy + 1, false)
-    elseif energy == 9
-        # new flash
-        return (10, true)
-    else
-        # already flashed
-        return (10, false)
-    end
-end
-    
 
-
-function step(energy::Array{Int}, flashes::Int)
-    new_energy = copy(energy)
-    n_updates = ones(Int, size(energy))
-    while maximum(n_updates) > 0
+function step(energy::Array{Int})
+    new_energy = 1 .+ energy  # broadcast
+    flashed = zeros(size(energy))
+    all_done = false
+    while ! all_done
+        prior_flashes = sum(flashed)
         for i=1:size(energy, 1)
             for j=1:size(energy, 2)
-                if n_updates[i, j] == 0
-                    continue
-                end
-                (new_value, flashed)=increment(new_energy[i, j])
-                new_energy[i, j] = new_value
-                n_updates[i, j] -= 1
-                if flashed
-                    flashes += 1
+                if new_energy[i, j] >= 10 && flashed[i, j] == 0
+                    flashed[i, j] = 1
                     for (x, y) in getNeighbors(i, j, size(energy)...)
-                        n_updates[x, y] += 1
+                        try
+                            new_energy[x, y] += 1
+                        catch BoundsError
+                            # do nothing
+                        end
                     end
                 end
             end
         end
+        all_done = sum(flashed) == sum(prior_flashes)
     end
-    # change values for those that flashed back to 0
     for i=1:size(energy, 1)
         for j=1:size(energy, 2)
-            new_energy[i, j] = new_energy[i, j] % 10
+            if new_energy[i, j] >= 10
+                new_energy[i, j] = 0
+            end
         end
     end
-    (new_energy, flashes)
-end
+    (new_energy,  sum(flashed))
+end 
 
 function part1(fname)
     open(fname, "r") do f
         arr = read_input_string(read(f, String))
-        actual1 = step(arr, 0)
+        actual1 = step(arr)
         expected_step1 = read_input_string("""6594254334
         3856965822
         6375667284
@@ -91,7 +74,7 @@ function part1(fname)
         6394862637""")
         if fname == "sample_input.txt"
             @assert actual1[1] == expected_step1
-            actual2 = step(expected_step1, 0)
+            actual2 = step(expected_step1)
             expected_step2 = read_input_string("""8807476555
             5089087054
             8597889608
@@ -105,11 +88,12 @@ function part1(fname)
             println(actual2[1])
             @assert actual2[1] == expected_step2
             # count flashes
-            flashes = 0
+            total_flashes = 0
             for i in 1:10
-                (arr, flashes) = step(arr, flashes)
+                (arr, flashes) = step(arr)
+                total_flashes += flashes
             end
-            @assert flashes == 204
+            @assert total_flashes == 204
         end
 
     end
