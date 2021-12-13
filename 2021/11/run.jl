@@ -115,10 +115,13 @@ open("input.txt", "r") do f
     5725855786
     1717382281""")
     # count flashes
-    total_flashes = 0
-    for i in 1:100
+    iter = 0
+    while true
+        iter += 1
         (arr, flashes) = step(arr)
-        total_flashes += flashes
+        if flashes == size(arr, 1) * size(arr, 2)
+            println(iter)
+            break
+        end
     end
-    println(total_flashes)
 end
