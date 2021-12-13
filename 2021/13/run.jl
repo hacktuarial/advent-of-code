@@ -1,5 +1,6 @@
 using Pipe
 
+
 function parseNumbers(xy::String, delimiter::Char=',')
     (x, y) = split(xy, delimiter)
     [parse(Int, x), parse(Int, y)]
@@ -99,19 +100,34 @@ function part1(fname::String)
     return nonZero(paper)
 end
 
-part1("sample.txt")
-"input.txt" |> readInput |> createDotMatrix |>
-    foldLeft(_, 655) |>
-    foldUp(_, 447) |>
-    foldUp(_, 327) |>
-    foldLeft(_, 223) |>
-    foldUp(_, 163) |>
-    foldLeft(_, 111) |>
-    foldUp(_, 81) |>
-    foldLeft(_, 55) |>
-    foldUp(_, 40) |>
-    foldLeft(_, 27) |>
-    foldLeft(_, 13) |>
-    foldLeft(_, 6) |>
-    println
+function prettyPrint(arr)
+    open("result.txt", "w") do f
+        for i=1:size(arr, 1)
+            for j=1:size(arr, 2)
+                if arr[i, j] >= 0
+                    write(f, '#')
+                else
+                    write(f, '.')
+                end
+            end
+            write(f, '\n')
+        end
+    end
+end
 
+part1("sample.txt")
+open("input.txt", "r") do f
+    paper = createDotMatrix(readInput("input.txt"))
+    lines = filter(line -> match(r"[xy]=[0-9]+", line) !== nothing, readlines(f))
+    for line in lines
+        position = parse(Int, match(r"[0-9]+", line).match)
+        if match(r"x=", line) === nothing
+            # y means foldUp
+            paper = foldUp(paper, position)
+        else
+            # x means foldLeft
+            paper = foldLeft(paper, position)
+        end
+    end
+    prettyPrint(paper)
+end
