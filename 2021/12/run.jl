@@ -42,26 +42,20 @@ function findNeighbors(vertex, path, edges)
     neighbors
 end
 
-function findPath(here::String, destination::String, visited, path, edges)
-    visited = push!(visited, here)
+function findPath(here::String, destination::String, path::Array{String}, edges)
+    # depth-first search
     path = push!(path, here)
     if here === destination
         open("paths.txt", "a") do f
-            write(f, join("-", path))
+            map(s -> write(f, s * "-"), path)
             write(f, "\n")
         end
-        return
     end
-    neighbors = findNeighbors(here, path, edges)
-    for vertex in neighbors
-        if ! (vertex in visited)
-            # recursive call
-            return findPath(vertex, destination, visited, path, edges)
-        end
+    for vertex in findNeighbors(here, path, edges)
+        findPath(vertex, destination, path, edges)
     end
     # backtrack
-    pop!(path)
-    pop!(visited)
+    # pop!(path)
 end
 
 
@@ -71,9 +65,10 @@ function part1(fname::String)
     open(fname, "r") do f
         edges = map(x -> split(x, "-"), readlines(f))
         edges = map(x -> map(String, x), edges)
-        findPath("start", "end", [], [], edges)
+        path::Array{String} = []
+        findPath("start", "end", path, edges)
     end
 end
 
 
-part1("sample_input.txt")
+part1("sample2.txt")
