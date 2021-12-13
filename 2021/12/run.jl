@@ -24,6 +24,12 @@ function nVisits(vertex::String, path)::Int
     length(filter(v -> v == vertex, path))
 end
 
+function doubleVisit(path, maxVisits::Int)::Bool
+    small_caves = filter(isSmallCave, path)
+    visits = map(cave -> nVisits(cave, path), small_caves)
+    (length(visits) == 0) ? false : maximum(visits) == maxVisits
+end
+
 function canVisit(vertex::String, path)::Bool
     if vertex == "start"
         # can only visit start
@@ -34,7 +40,12 @@ function canVisit(vertex::String, path)::Bool
         return true
     else
         # small cave
-        return !(vertex in path)
+        # if any small cave has been visited twice, this one can only be visited once
+        if doubleVisit(path, 1)
+            return !(vertex in path)
+        else
+            return true
+        end
     end
 end
 
