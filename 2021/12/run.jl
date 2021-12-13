@@ -19,15 +19,32 @@ isBigCave = x -> !isSmallCave(x)
 @assert isSmallCave("he")
 
 
+function nVisits(vertex::String, path)::Int
+    # how many times has this path been through a particular cave
+    length(filter(v -> v == vertex, path))
+end
+
+function canVisit(vertex::String, path)::Bool
+    if vertex == "start"
+        # can only visit start
+        return false
+    elseif vertex == "end"
+        return true
+    elseif isBigCave(vertex)
+        return true
+    else
+        # small cave
+        return !(vertex in path)
+    end
+end
+
 
 function findNeighbors(vertex::String, path::Array{String}, edges)
     neighbors::Array{String} = []
     for edge in edges
         if vertex in edge
             neighbor = the_other_one(vertex, edge)
-            if isSmallCave(neighbor) && (neighbor in path)
-                # already visited, don't visit again
-            else
+            if canVisit(neighbor, path)
                 # big cave, or unvisited small cave
                 neighbors = push!(neighbors, neighbor)
             end
@@ -52,18 +69,15 @@ end
 
 testFindNeighbors()
 
-function findPath(here::String, destination::String, path::Array{String}, edges)
+function findPath(here::String, destination::String, path::Array{String}, edges, paths)
     # depth-first search
     if here == destination
-        open("paths.txt", "a") do f
-            map(s -> write(f, s * "-"), path)
-            write(f, "\n")
-        end
+        paths = push!(paths, path)
         return
     end
     path = push!(path, here)
     for vertex in findNeighbors(here, path, edges)
-        findPath(vertex, destination, copy(path), edges)
+        findPath(vertex, destination, copy(path), edges, paths)
     end
 end
 
@@ -74,11 +88,10 @@ function part1(fname::String)
     open(fname, "r") do f
         edges = map(x -> map(String, split(x, "-")), readlines(f))
         empty_path::Array{String} = []
+        paths = []
         # map(println, edges)
-        if fname == "sample1.txt"
-
-        end
-        findPath("start", "end", empty_path, edges)
+        findPath("start", "end", empty_path, edges, paths)
+        println(length(paths))
     end
 end
 
