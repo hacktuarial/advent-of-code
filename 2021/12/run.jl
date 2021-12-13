@@ -38,14 +38,22 @@ end
 
 
 function testFindNeighbors()
-    path::Array{String} = []
-    edges::Array{Array{String}} = [["A", "c"]]
-    @assert findNeighbors("c", path, edges) == ["A", ]
+    empty_path::Array{String} = []
+    edges::Array{Array{String}} = [["start", "A"], ["start", "b"], ["A", "c"], ["A", "b"], ["b", "d"], ["A", "end"], ["b", "end"]]
+    @assert findNeighbors("c", empty_path, edges) == ["A", ]
+    @assert findNeighbors("start", empty_path, edges) == ["A", "b"]
+    @assert findNeighbors("c", empty_path, edges) == ["A", ]
+    @assert findNeighbors("end", empty_path, edges) == ["A", "b"]
+    @assert findNeighbors("d", empty_path, edges) == ["b", ]
+    path = ["start"]
+    @assert ! ("start" in findNeighbors("A", path, edges))
+    @assert "end" in findNeighbors("A", path, edges)
 end
+
+testFindNeighbors()
 
 function findPath(here::String, destination::String, path::Array{String}, edges)
     # depth-first search
-    path = push!(path, here)
     if here == destination
         open("paths.txt", "a") do f
             map(s -> write(f, s * "-"), path)
@@ -53,8 +61,9 @@ function findPath(here::String, destination::String, path::Array{String}, edges)
         end
         return
     end
+    path = push!(path, here)
     for vertex in findNeighbors(here, path, edges)
-        findPath(vertex, destination, path, edges)
+        findPath(vertex, destination, copy(path), edges)
     end
 end
 
@@ -67,14 +76,6 @@ function part1(fname::String)
         empty_path::Array{String} = []
         # map(println, edges)
         if fname == "sample1.txt"
-            @assert findNeighbors("start", empty_path, edges) == ["A", "b"]
-            @assert findNeighbors("c", empty_path, edges) == ["A", ]
-            @assert findNeighbors("end", empty_path, edges) == ["A", "b"]
-            @assert findNeighbors("d", empty_path, edges) == ["b", ]
-
-            path = ["start", "b"]
-            # @assert findNeighbors("d", path, edges) == ["d","A", "end" ]
-            println(findNeighbors("end", path, edges))
 
         end
         findPath("start", "end", empty_path, edges)
@@ -82,4 +83,4 @@ function part1(fname::String)
 end
 
 
-part1("sample1.txt")
+part1("input.txt")
