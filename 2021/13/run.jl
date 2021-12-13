@@ -20,8 +20,9 @@ function nonZero(mat::Array{Int})
 end
 
 function createDotMatrix(dots)
-    dim = maximum(map(maximum, dots)) + 1
-    dot_matrix = zeros(Int, (dim, dim))
+    n_cols = maximum(map(xy -> x[1], dots))
+    n_rows = maximum(map(xy -> x[2], dots))
+    dot_matrix = zeros(Int, (n_rows, n_cols))
     for (col, row) in dots
         # julia starts indexing at 1 :)
         col += 1
@@ -51,8 +52,27 @@ function foldUp(mat::Array{Int}, y::Int)::Array{Int}
     out
 end
 
-actual = foldUp([ 0 0 0 0; 1 0 1 0; 0 1 0 1; 1 1 1 1], 2)
-@assert  actual== [0 0 0 0; 2 1 2 1] 
+function foldLeft(mat::Array{Int}, x::Int)::Array{Int}
+    x += 1
+    dim = size(mat, 2)
+    out = copy(mat[:, 1:(x-1)])
+    for j=1:(dim-x)
+        out[:, x - j] += mat[:, x + j]
+    end
+    out
+end
+
+input = [ 0 0 0 0;
+          1 0 1 0;
+          0 1 0 1;
+          1 1 1 1]
+actual = foldUp(input, 2)
+expected = [0 0 0 0; 2 1 2 1]
+@assert actual == expected
+
+actual = foldLeft(input, 2)
+expected = [0 0; 1 0; 0 2; 1 2]
+@assert actual == expected
 
 
 actual = foldUp([0 0 0 1 0 0 1 0 0 1 0 0 0 0 0; 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 1 0 0 0 0 1 0 1 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 1 0 0 0 0 1 0 1 1 0 0 0 0 0; 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0; 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0], 7) 
@@ -61,13 +81,15 @@ expected = [1 0 1 1 0 0 1 0 0 1 0 0 0 0 0; 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0; 0 0 0 
 @assert nonZero(expected) === 17
 
 
-@assert foldLeft([1 0 1 1 0 0 1 0 0 1 0 0 0 0 0; 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0; 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0; 0 1 0 1 0 0 1 0 2 1 1 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; 0 1 0 1 0 0 1 0 2 1 1 0 0 0 0; 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0; 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0; 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0],
-5) == [1 1 1 1 1; 1 0 0 0 1; 1 0 0 0 1; 1 0 0 0 1; 1 1 1 1 1; 0 0 0 0 0; 0 0 0 0 0]
+actual = copy(expected)
+expected = [1 1 1 1 1; 1 0 0 0 1; 1 0 0 0 1; 1 0 0 0 1; 1 1 1 1 1; 0 0 0 0 0; 0 0 0 0 0]
+println(actual)
+@assert foldLeft(actual, 5) == expected
 
 function part1(fname::String)
     paper = createDotMatrix(readInput(fname))
     paper = foldUp(paper, 7)
-    # paper = foldLeft(paper, 5)
+    paper = foldLeft(paper, 5)
     # println(paper)
 end
 
