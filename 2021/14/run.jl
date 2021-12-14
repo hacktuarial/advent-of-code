@@ -107,12 +107,11 @@ function part1()
         # the scalable way
 
         counts::Dict{Char, Int} = Dict()
-        explode("NNCB", rules, 0, counts)
+        explode("NNCB", rules, 1, counts)
         println(counts)
-        @assert counts['N'] === 2
-        @assert counts['C'] === 1
-        @assert counts['B'] === 1
-        @assert minMaxCounts(counts) === 1588
+        println(countmap([c for c in step2]))
+        @assert (counts) == countmap([c for c in step2])
+        # @assert minMaxCounts(counts) === 1588
     end
 
     # open("input.txt", "r") do f
