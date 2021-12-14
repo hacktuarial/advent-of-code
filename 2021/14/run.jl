@@ -1,4 +1,4 @@
-
+using Dates
 using StatsBase
 
 function insert(pair::String, rules::Dict)::String
@@ -67,9 +67,15 @@ function part1()
     end
 
     open("input.txt", "r") do f
+        timing::Array{Int} = []
         (step, rules) = read_input(f)
-        for _=1:10
+        for i=1:40
+            tick = datetime2unix(now())
             step = doStep(step, rules)
+            tock = datetime2unix(now())
+            elapsed = floor(tock - tick)  # seconds
+            timing = push!(timing, elapsed)
+            println(timing)
         end
         counts = countmap([c for c in step])
         println(counts)
