@@ -18,16 +18,6 @@ end
 
 @assert make_pairs("ABC") == ["AB", "BC"]
 
-function isEven(i::Int)::Bool
-    (i % 2) == 0
-end
-
-isOdd = x -> ! isEven(x)
-
-@assert isEven(2)
-@assert isOdd(1)
-
-
 function combine_pairs(pairs::Array{String})::String
     reduce((p1, p2) -> p1 * p2[2:end], pairs)
 end
@@ -39,7 +29,7 @@ end
 function explode(template::String, rules::Dict, steps::Int, counts::Dict)
     if steps === 0
         # update counts
-        for c::Char in template
+        for c::Char in template[2:end]
             if haskey(counts, c)
                 counts[c] += 1
             else
@@ -52,11 +42,6 @@ function explode(template::String, rules::Dict, steps::Int, counts::Dict)
     for pair in pairs
         explode(insert(pair, rules), rules, steps-1, counts)
     end
-end
-
-function testExplode()
-    counts = Dict()
-    template = ""
 end
 
 
@@ -88,38 +73,30 @@ function read_input(f)
     (template, rules)
 end
 
-function part1()
-    open("sample.txt", "r") do f
-        (template, rules) = read_input(f)
-        step1 = doStep(template, rules)
-        @assert step1 == "NCNBCHB"
-        step2 = doStep(step1, rules)
-        @assert step2 == "NBCCNBBBCBHCB"
-        step3 = doStep(step2, rules)
-        @assert step3 == "NBBBCNCCNBBNBNBBCHBHHBCHB"
-        step4 = doStep(step3, rules)
-        @assert step4 == "NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB"
-        for _ in 1:10
-            template = doStep(template, rules)
-        end
-        # println(countmap([c for c in template]))
-
-        # the scalable way
-
-        counts::Dict{Char, Int} = Dict()
-        explode("NNCB", rules, 1, counts)
-        println(counts)
-        println(countmap([c for c in step2]))
-        @assert (counts) == countmap([c for c in step2])
-        # @assert minMaxCounts(counts) === 1588
+open("sample.txt", "r") do f
+    (template, rules) = read_input(f)
+    step1 = doStep(template, rules)
+    @assert step1 == "NCNBCHB"
+    step2 = doStep(step1, rules)
+    @assert step2 == "NBCCNBBBCBHCB"
+    step3 = doStep(step2, rules)
+    @assert step3 == "NBBBCNCCNBBNBNBBCHBHHBCHB"
+    step4 = doStep(step3, rules)
+    @assert step4 == "NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB"
+    for _ in 1:10
+        template = doStep(template, rules)
     end
 
-    # open("input.txt", "r") do f
-    #     timing::Array{Int} = []
-    #     (template, rules) = read_input(f)
-    #     counts = Dict()
-    #     explode(template, rules, 20, counts)
-    # end
+    # the scalable way
+    # need to seed this with the first character of the template
+    counts::Dict{Char, Int} = Dict('N' => 1)
+    explode("NNCB", rules, 10, counts)
+    @assert minMaxCounts(counts) === 1588
 end
 
-part1()
+open("input.txt", "r") do f
+    (template, rules) = read_input(f)
+    counts::Dict{Char, Int} = Dict(template[1]::Char => 1)
+    explode(template, rules, 40, counts)
+    println(minMaxCounts(counts))
+end
