@@ -26,14 +26,28 @@ end
 @assert combine_pairs(["NCN", "NBC"]) == "NCNBC"
 
 
+function updateCounts(string::String, counts::Dict)
+    for c::Char in string[2:end]
+        if haskey(counts, c)
+            counts[c] += 1
+        else
+            counts[c] = 1
+        end
+    end
+end
+
+
 function explode(template::String, rules::Dict, steps::Int, counts::Dict)
+    lk = ReentrantLock()
     if steps === 0
         # update counts
-        for c::Char in template[2:end]
-            if haskey(counts, c)
-                counts[c] += 1
-            else
-                counts[c] = 1
+        # https://docs.julialang.org/en/v1/manual/multi-threading/#man-multithreading
+        begin
+            lock(lk)
+            try
+                updateCounts(template, counts)
+            finally
+                unlock(lk)
             end
         end
         return nothing
@@ -97,6 +111,6 @@ end
 open("input.txt", "r") do f
     (template, rules) = read_input(f)
     counts::Dict{Char, Int} = Dict(template[1]::Char => 1)
-    explode(template, rules, 40, counts)
-    println(minMaxCounts(counts))
+    # explode(template, rules, 20, counts)
+    # println(minMaxCounts(counts))
 end
