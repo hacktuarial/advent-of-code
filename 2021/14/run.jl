@@ -36,11 +36,46 @@ end
 @assert combine_pairs(["NCN", "NBC"]) == "NCNBC"
 
 
+function explode(template::String, rules::Dict, steps::Int, counts::Dict)
+    if steps === 0
+        # update counts
+        for c::Char in template
+            if haskey(counts, c)
+                counts[c] += 1
+            else
+                counts[c] = 1
+            end
+        end
+        return nothing
+    end
+    pairs = make_pairs(template)
+    for pair in pairs
+        explode(insert(pair, rules), rules, steps-1, counts)
+    end
+end
+
+function testExplode()
+    counts = Dict()
+    template = ""
+end
+
+
 
 function doStep(template::String, rules::Dict)::String
     pairs = make_pairs(template)
     combine_pairs(map(pair -> insert(pair, rules), pairs))
 end
+
+
+function minMaxCounts(template::String)::Int
+    counts = countmap([c for c in template])
+    minMaxCounts(counts)
+end
+
+function minMaxCounts(counts::Dict)::Int
+    maximum(values(counts)) - minimum(values(counts))
+end
+
 
 function read_input(f)
     lines = readlines(f)
@@ -64,23 +99,28 @@ function part1()
         @assert step3 == "NBBBCNCCNBBNBNBBCHBHHBCHB"
         step4 = doStep(step3, rules)
         @assert step4 == "NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB"
+        for _ in 1:10
+            template = doStep(template, rules)
+        end
+        # println(countmap([c for c in template]))
+
+        # the scalable way
+
+        counts::Dict{Char, Int} = Dict()
+        explode("NNCB", rules, 0, counts)
+        println(counts)
+        @assert counts['N'] === 2
+        @assert counts['C'] === 1
+        @assert counts['B'] === 1
+        @assert minMaxCounts(counts) === 1588
     end
 
-    open("input.txt", "r") do f
-        timing::Array{Int} = []
-        (step, rules) = read_input(f)
-        for i=1:40
-            tick = datetime2unix(now())
-            step = doStep(step, rules)
-            tock = datetime2unix(now())
-            elapsed = floor(tock - tick)  # seconds
-            timing = push!(timing, elapsed)
-            println(timing)
-        end
-        counts = countmap([c for c in step])
-        println(counts)
-        println(maximum(values(counts)) - minimum(values(counts)))
-    end
+    # open("input.txt", "r") do f
+    #     timing::Array{Int} = []
+    #     (template, rules) = read_input(f)
+    #     counts = Dict()
+    #     explode(template, rules, 20, counts)
+    # end
 end
 
 part1()
