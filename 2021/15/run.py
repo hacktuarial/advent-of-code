@@ -5,7 +5,6 @@ from numpy.testing import assert_array_equal
 import numpy as np
 
 
-
 def read_input(fname):
     with open(fname, "r") as f:
         lines = f.readlines()
@@ -42,20 +41,13 @@ assert set(get_neighbors(np.ones((3, 3)), (1, 1))) == set(
 
 def find_min_distance(matrix, known) -> Tuple[int]:
     """Returns the index of the minimum value"""
-    min_value = np.inf
-    which_min = None
-    for i in range(matrix.shape[0]):
-        for j in range(matrix.shape[1]):
-            if (i, j) in known:
-                continue
-            if matrix[i, j] < min_value:
-                which_min = (i, j)
-                min_value = matrix[i, j]
-    return which_min
+    min_distance = matrix[:, :]  # copy
+    min_distance[known > 0] = np.inf
+    return np.unravel_index(min_distance.argmin(), min_distance.shape)
 
 
 def dijkstra(matrix, start: Tuple, end: Tuple):
-    known = {start}
+    known = np.zeros_like(matrix).astype(bool)
     distances = np.ones(matrix.shape) * np.inf
     for neighbor in get_neighbors(matrix, start):
         # no cost incurred at starting vertex
@@ -68,7 +60,8 @@ def dijkstra(matrix, start: Tuple, end: Tuple):
             new_distance = distances[v[0], v[1]] + matrix[neighbor[0], neighbor[1]]
             distances[neighbor[0], neighbor[1]] = min(current_distance, new_distance)
         last = v
-        known = known.union({v})
+        known[v[0], v[1]] = True
+        logger.info("visited %f vertices", known.sum() / (matrix.shape[0] ** 2))
     return distances[end[0], end[1]]
 
 
@@ -81,23 +74,26 @@ def increment(matrix, n_times):
         new_matrix[new_matrix == 10] = 1
     return new_matrix
 
+
 mat = read_input("sample.txt")
 assert_array_equal(mat, increment(mat, 0))
 
 
 def expand(matrix):
-    rows = [[None] * 5] * 5 # 5x5 block
+    dim = matrix.shape[0]
+    matrix_out = np.zeros((dim * 5, dim * 5))
     for i in range(5):
         for j in range(5):
-            rows[i][j] = increment(matrix, i + j)
-    row_blocks = [np.hstack(row) for row in rows]
-    return np.vstack(row_blocks)
+            matrix_out[dim * i : dim * (i + 1), dim * j : dim * (j + 1)] = increment(
+                matrix, i + j
+            )
+    return matrix_out
 
 
 actual = expand(read_input("sample.txt"))
 assert actual.shape == (50, 50)
 expected = read_input("sample_expanded.txt")
-assert (actual == expected).all(), (actual[:10, :10])
+assert (actual == expected).all()
 
 
 def part1(fname):
@@ -108,6 +104,7 @@ def part1(fname):
     end = (matrix.shape[0] - 1, matrix.shape[1] - 1)
     cost = dijkstra(matrix, start, end)
     return cost
+
 
 def part2(fname):
     matrix = expand(read_input(fname))
@@ -121,3 +118,4 @@ assert 40 == part1("sample.txt")
 # assert 527 == part1("input.txt")
 
 assert part2("sample.txt") == 315
+logger.info(part2("input.txt"))
