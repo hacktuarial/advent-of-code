@@ -24,4 +24,6 @@ if __name__ == "__main__":
     assert 45 == find_highest_style(target=sample, lim=20)[1]
     # assert 8911 == find_highest_style(target=full, lim=200)
     assert part2(target=sample, lim=50) == 112
-    print(parallel_part2(230))  # answer should be more than 4400
+    # no point in including initial velocities > max(target)
+    # this runs in 12seconds on a 2015 macbook pro
+    print(parallel_part2(230))

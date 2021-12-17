@@ -1,6 +1,3 @@
-from joblib import Memory
-
-memory = Memory("/tmp")
 
 
 class Probe:
