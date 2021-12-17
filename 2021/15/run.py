@@ -1,8 +1,9 @@
-import sys
-from typing import List, Tuple
+from typing import Tuple
 
 from logzero import logger
+from numpy.testing import assert_array_equal
 import numpy as np
+
 
 
 def read_input(fname):
@@ -71,6 +72,34 @@ def dijkstra(matrix, start: Tuple, end: Tuple):
     return distances[end[0], end[1]]
 
 
+def increment(matrix, n_times):
+    if n_times == 0:
+        return matrix
+    new_matrix = matrix[:, :]
+    for i in range(n_times):
+        new_matrix = 1 + new_matrix
+        new_matrix[new_matrix == 10] = 1
+    return new_matrix
+
+mat = read_input("sample.txt")
+assert_array_equal(mat, increment(mat, 0))
+
+
+def expand(matrix):
+    rows = [[None] * 5] * 5 # 5x5 block
+    for i in range(5):
+        for j in range(5):
+            rows[i][j] = increment(matrix, i + j)
+    row_blocks = [np.hstack(row) for row in rows]
+    return np.vstack(row_blocks)
+
+
+actual = expand(read_input("sample.txt"))
+assert actual.shape == (50, 50)
+expected = read_input("sample_expanded.txt")
+assert (actual == expected).all(), (actual[:10, :10])
+
+
 def part1(fname):
     matrix = read_input(fname)
     logger.info(matrix.shape)
@@ -80,5 +109,15 @@ def part1(fname):
     cost = dijkstra(matrix, start, end)
     return cost
 
+def part2(fname):
+    matrix = expand(read_input(fname))
+    start = (0, 0)
+    end = (matrix.shape[0] - 1, matrix.shape[1] - 1)
+    cost = dijkstra(matrix, start, end)
+    return cost
+
 
 assert 40 == part1("sample.txt")
+# assert 527 == part1("input.txt")
+
+assert part2("sample.txt") == 315
