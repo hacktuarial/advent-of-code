@@ -2,6 +2,7 @@ from joblib import Memory
 
 memory = Memory("/tmp")
 
+
 class Probe:
     def __init__(self, x_velocity, y_velocity, target):
         self.x = 0
@@ -30,8 +31,9 @@ class Probe:
         return x_min <= self.x <= x_max and y_min <= self.y <= y_max
 
     def still_has_a_chance(self):
-        y_max = self.target[1][1]
-        return self.y >= y_max
+        # once it falls below this level, it cannot return
+        y_min = self.target[1][0]
+        return self.y >= y_min
 
 
 def reaches_target(velocity):
@@ -50,7 +52,6 @@ assert reaches_target((9, 0))
 assert not reaches_target((17, -4))
 
 
-
 def find_highest_style(target, lim):
     best_x, best_y = (0, 0)
     y_max = -1_000_000
@@ -66,12 +67,16 @@ def find_highest_style(target, lim):
     return ((best_x, best_y), y_max)
 
 
-@memory.cache
 def test_probe(x, y, target):
     probe = Probe(x, y, target)
     while probe.still_has_a_chance():
         probe.step()
-    return probe.in_target()
+        if probe.in_target():
+            with open("actual.txt", "a") as f:
+                f.write(",".join([str(x), str(y)]))
+                f.write("\n")
+            return True
+    return False
 
 
 def part2(target, lim):
@@ -80,5 +85,3 @@ def part2(target, lim):
         for y in range(-lim, lim):
             n_solutions += test_probe(x, y, target)
     return n_solutions
-
-
