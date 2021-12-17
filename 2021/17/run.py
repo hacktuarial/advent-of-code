@@ -25,11 +25,15 @@ class Probe:
         y_min, y_max = self.target[1]
         return x_min <= self.x <= x_max and y_min <= self.y <= y_max
 
+    def still_has_a_chance(self):
+        y_max = self.target[1][1]
+        return self.y >= y_max
+
 
 def reaches_target(velocity, max_steps):
     target = ((20, 30), (-10, -5))
     probe = Probe(*velocity, target)
-    for _ in range(max_steps):
+    while probe.still_has_a_chance():
         probe.step()
         if probe.in_target():
             return True
@@ -41,19 +45,31 @@ assert reaches_target((6, 3), 100)
 assert reaches_target((9, 0), 100)
 assert not reaches_target((17, -4), 100)
 
+
 def optimize_me(velocity):
     # sample
     target = ((20, 30), (-10, -5))
     probe = Probe(*velocity, target)
-    for _ in range(100):
-        probe.step()
+    while probe.still_has_a_chance():
         if probe.in_target():
             return -1 * probe.maximum_y
     # never reached target
     return 100_000
 
-from scipy.optimize import minimize
 
-solution = minimize(optimize_me, (10, -3))
-print(solution)
+def brute_force_search(target):
+    best_x, best_y = (0, 0)
+    y_max = -1_000_000
+    for x in range(-20, 20):
+        for y in range(-20, 20):
+            probe = Probe(x, y, target)
+            while probe.still_has_a_chance():
+                probe.step()
+            if probe.in_target():
+                if probe.maximum_y > y_max:
+                    y_max = probe.maximum_y
+                    best_x, best_y = x, y
+    return ((best_x, best_y), y_max)
 
+
+print(brute_force_search(target=((20, 30), (-10, -5))))
