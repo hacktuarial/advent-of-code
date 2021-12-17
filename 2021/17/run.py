@@ -40,3 +40,20 @@ assert reaches_target((7, 2), 100)
 assert reaches_target((6, 3), 100)
 assert reaches_target((9, 0), 100)
 assert not reaches_target((17, -4), 100)
+
+def optimize_me(velocity):
+    # sample
+    target = ((20, 30), (-10, -5))
+    probe = Probe(*velocity, target)
+    for _ in range(100):
+        probe.step()
+        if probe.in_target():
+            return -1 * probe.maximum_y
+    # never reached target
+    return 100_000
+
+from scipy.optimize import minimize
+
+solution = minimize(optimize_me, (10, -3))
+print(solution)
+
