@@ -36,15 +36,19 @@ def hexadecimal_to_binary(hexa: str) -> str:
 assert hexadecimal_to_binary("D2FE28") == "110100101111111000101000"
 
 
-@dataclass
 class Packet:
+    pass
+
+
+@dataclass
+class LiteralPacket(Packet):
     version: int
     type_id: int
     value: int
 
 
 @dataclass
-class Operator:
+class Operator(Packet):
     version: int
     type_id: int
     length_type_id: int
@@ -62,60 +66,79 @@ def read_number(string: str) -> (int, str):
     return binary_to_int(value), string[index + 5 :]
 
 
-# assert read_number("11010001010") == 10, read_number("11010001010")
-# assert read_number("0101001000100100") == 20
-# assert read_numbers("110100010100101001000100100") == [10, 20]
-# print(read_numbers("1101000101001010010001001000000000"))
-# assert read_numbers("01010000001100100000100011000001100000") == [1, 2, 3]
-
-
-def parse_packets(binary: str):
-    if len(binary) == 0 or set(binary) == {"0"}:
-        return []
-    version: int = binary_to_int(binary[:3])
-    type_id: int = binary_to_int(binary[3:6])
+def parse_packets(string: str, packets: List) -> str:
+    if len(string) == 0 or set(string) == {"0"}:
+        return packets
+    left, right = 0, 3
+    version: int = binary_to_int(string[left:right])
+    left, right = left + 3, right + 3
+    type_id: int = binary_to_int(string[left:right])
+    # right = right + 3
     if type_id == 4:
         # it's a literal-value packet
-        value, binary = read_number(binary[6:])
-        return [Packet(version=version, type_id=type_id, value=value)] + parse_packets(
-            binary
-        )
+        value = ""
+        while string[right] == "1":
+            value += string[right + 1 : right + 5]
+            right += 5
+        # add the last one
+        value += string[right + 1 : right + 5]
+        right += 5
+        value = binary_to_int(value)
+        packet = LiteralPacket(version=version, type_id=type_id, value=value)
+        packets.append(packet)
+        return parse_packets(string[right:], packets)
     else:
         # it's an operator
-        length_type_id = int(binary[6])
-
+        length_type_id = int(string[left])
+        my_packets = []
         if length_type_id == 0:
             # then the next 15 bits are a number that represents the total length in bits of the sub-packets contained by this packet.
-            start_of_packets = 3 + 3 + 1 + 15
-            # length_of_many_packets = binary_to_int(binary[4:start_of_packets])
+            right = left + 15
+            n_bits = binary_to_int(string[left:right])
+            left, right = right, right + n_bits
+            # add these packets to this Operator packet
+            parse_packets(string[left:right], my_packets)
+            packet = Operator(
+                version=version,
+                type_id=type_id,
+                length_type_id=length_type_id,
+                packets=my_packets,
+            )
+            packets.append(packet)
+            return parse_packets(string[right + n_bits :], packets)
         else:
             # then the next 11 bits are a number that represents the number of sub-packets immediately contained by this packet.
-            start_of_packets = 6 + 11 + 1
-            # n_packets = binary_to_int(binary[6:start_of_packets])
-            # n_packets seems useless?
-        packets, binary = parse_packets(binary[start_of_packets:])
-        return Operator(
-            version=version,
-            type_id=type_id,
-            length_type_id=length_type_id,
-            packets=packets,
-        )
+            right = left + 11
+            n_packets = binary_to_int(string[left:right])
+            while len(my_packets) < n_packets:
+                string = parse_packets(string, my_packets)
+            packet = Operator(
+                version=version,
+                type_id=type_id,
+                length_type_id=length_type_id,
+                packets=my_packets,
+            )
+            packets.append(packet)
+            return parse_packets(string, packets)
 
 
 def test_packet():
     hexadecimal = "D2FE28"
-    expected = Packet(version=6, type_id=4, value=2021)
-    actual = parse_packets(hexadecimal_to_binary(hexadecimal))[0]
+    expected = [
+        LiteralPacket(version=6, type_id=4, value=2021),
+    ]
+    actual = []
+    parse_packets(hexadecimal_to_binary(hexadecimal), actual)
     assert actual == expected, actual
-    assert parse_packets("11010001010")[0].value == 10
-    assert parse_packets("0101001000100100")[0].value == 20
 
-    actual = parse_packets("110100010100101001000100100")
-    assert actual == [Packet(6, 4, 10), Packet(2, 4, 20)]
+    packets = []
+    actual = parse_packets("110100010100101001000100100", packets)
+    assert packets == [LiteralPacket(6, 4, 10), LiteralPacket(2, 4, 20)]
 
 
 def test_operator():
-    actual = parse_packets(hexadecimal_to_binary("38006F45291200"))
+    packets = []
+    actual = parse_packets(hexadecimal_to_binary("38006F45291200"), packets)
     assert actual.version == 1
     assert actual.type_id == 6
     assert actual.length_type_id == 0
