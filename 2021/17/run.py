@@ -5,7 +5,6 @@ from joblib import Parallel, delayed
 from util import *
 
 
-@memory.cache()
 def helper(xy):
     target = ((175, 227), (-134, -79))
     return test_probe(*xy, target)
@@ -22,8 +21,7 @@ if __name__ == "__main__":
     assert test_probe(6, 0, sample)
     assert test_probe(7, -1, sample)
     full = ((175, 227), (-134, -79))
-    print(find_highest_style(target=sample, lim=20))
-    # print(find_highest_style(target=((175, 227), (-134, -79)), lim=200))
-    actual = part2(target=sample, lim=50)
-    assert actual == 112, actual
-    print(parallel_part2(250))
+    assert 45 == find_highest_style(target=sample, lim=20)[1]
+    # assert 8911 == find_highest_style(target=full, lim=200)
+    assert part2(target=sample, lim=50) == 112
+    print(parallel_part2(230))  # answer should be more than 4400

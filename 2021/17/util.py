@@ -60,10 +60,10 @@ def find_highest_style(target, lim):
             probe = Probe(x, y, target)
             while probe.still_has_a_chance():
                 probe.step()
-            if probe.in_target():
-                if probe.maximum_y > y_max:
-                    y_max = probe.maximum_y
-                    best_x, best_y = x, y
+                if probe.in_target():
+                    if probe.maximum_y > y_max:
+                        y_max = probe.maximum_y
+                        best_x, best_y = x, y
     return ((best_x, best_y), y_max)
 
 
@@ -72,9 +72,6 @@ def test_probe(x, y, target):
     while probe.still_has_a_chance():
         probe.step()
         if probe.in_target():
-            with open("actual.txt", "a") as f:
-                f.write(",".join([str(x), str(y)]))
-                f.write("\n")
             return True
     return False
 
