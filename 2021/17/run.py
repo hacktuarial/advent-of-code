@@ -57,11 +57,11 @@ def optimize_me(velocity):
     return 100_000
 
 
-def brute_force_search(target):
+def brute_force_search(target, lim):
     best_x, best_y = (0, 0)
     y_max = -1_000_000
-    for x in range(-20, 20):
-        for y in range(-20, 20):
+    for x in range(-lim, lim):
+        for y in range(-lim, lim):
             probe = Probe(x, y, target)
             while probe.still_has_a_chance():
                 probe.step()
@@ -72,4 +72,5 @@ def brute_force_search(target):
     return ((best_x, best_y), y_max)
 
 
-print(brute_force_search(target=((20, 30), (-10, -5))))
+print(brute_force_search(target=((20, 30), (-10, -5)), lim=20))
+print(brute_force_search(target=((175, 227), (-134, -79)), lim=200))
