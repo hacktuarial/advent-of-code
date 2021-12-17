@@ -1,3 +1,7 @@
+from joblib import Memory
+
+memory = Memory("/tmp")
+
 class Probe:
     def __init__(self, x_velocity, y_velocity, target):
         self.x = 0
@@ -30,7 +34,7 @@ class Probe:
         return self.y >= y_max
 
 
-def reaches_target(velocity, max_steps):
+def reaches_target(velocity):
     target = ((20, 30), (-10, -5))
     probe = Probe(*velocity, target)
     while probe.still_has_a_chance():
@@ -40,24 +44,14 @@ def reaches_target(velocity, max_steps):
     return False
 
 
-assert reaches_target((7, 2), 100)
-assert reaches_target((6, 3), 100)
-assert reaches_target((9, 0), 100)
-assert not reaches_target((17, -4), 100)
+assert reaches_target((7, 2))
+assert reaches_target((6, 3))
+assert reaches_target((9, 0))
+assert not reaches_target((17, -4))
 
 
-def optimize_me(velocity):
-    # sample
-    target = ((20, 30), (-10, -5))
-    probe = Probe(*velocity, target)
-    while probe.still_has_a_chance():
-        if probe.in_target():
-            return -1 * probe.maximum_y
-    # never reached target
-    return 100_000
 
-
-def brute_force_search(target, lim):
+def find_highest_style(target, lim):
     best_x, best_y = (0, 0)
     y_max = -1_000_000
     for x in range(-lim, lim):
@@ -72,5 +66,25 @@ def brute_force_search(target, lim):
     return ((best_x, best_y), y_max)
 
 
-print(brute_force_search(target=((20, 30), (-10, -5)), lim=20))
-print(brute_force_search(target=((175, 227), (-134, -79)), lim=200))
+@memory.cache
+def test_probe(x, y, target):
+    probe = Probe(x, y, target)
+    while probe.still_has_a_chance():
+        probe.step()
+    return probe.in_target()
+
+
+def part2(target, lim):
+    n_solutions = 0
+    for x in range(-lim, lim):
+        for y in range(-lim, lim):
+            n_solutions += test_probe(x, y, target)
+    return n_solutions
+
+
+
+if __name__ == "__main__":
+    print(find_highest_style(target=((20, 30), (-10, -5)), lim=20))
+    # print(find_highest_style(target=((175, 227), (-134, -79)), lim=200))
+
+    print(part2(target=((175, 227), (-134, -79)), lim=150))
