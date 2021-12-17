@@ -46,6 +46,9 @@ class LiteralPacket(Packet):
     type_id: int
     value: int
 
+    def sum_version(self):
+        return self.version
+
 
 @dataclass
 class Operator(Packet):
@@ -53,6 +56,10 @@ class Operator(Packet):
     type_id: int
     length_type_id: int
     packets: List[Packet]
+
+    def sum_version(self):
+        return self.version + sum(p.sum_version() for p in self.packets)
+
 
 
 def read_number(string: str) -> (int, str):
