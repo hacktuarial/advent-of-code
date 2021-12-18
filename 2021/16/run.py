@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List
-from functools import reduce
 
 
 def binary_to_int(binary: str) -> int:
@@ -96,11 +95,12 @@ def parse_packets(string: str, packets: List) -> str:
         return parse_packets(string[right:], packets)
     else:
         # it's an operator
-        length_type_id = int(string[left])
+        length_type_id = int(string[right])
+        right += 1
         my_packets = []
         if length_type_id == 0:
             # then the next 15 bits are a number that represents the total length in bits of the sub-packets contained by this packet.
-            right = left + 15
+            left, right = right, right + 15
             n_bits = binary_to_int(string[left:right])
             left, right = right, right + n_bits
             # add these packets to this Operator packet
@@ -145,7 +145,7 @@ def test_packet():
 
 def test_operator():
     packets = []
-    actual = parse_packets(hexadecimal_to_binary("38006F45291200"), packets)
+    actual = parse_packets(hexadecimal_to_binary("38006F45291200"), packets)[0]
     assert actual.version == 1
     assert actual.type_id == 6
     assert actual.length_type_id == 0
