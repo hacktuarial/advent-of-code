@@ -7,65 +7,75 @@ end
 @assert binary2int("000100010") === 34
 
 
-function safeGet(mat::Array{Int}, row::Int, col::Int)::Char
+function safeGet(mat::Array{Int}, row::Int, col::Int)::Int
     try
         return mat[row, col]
     catch BoundsError
-        return '0'
+        return 0
     end
 end
 
-function enhance(mat::Array{Int}, row::Int, col::Int, algorithm::String)::Char
+function enhance(mat::Array{Int}, row::Int, col::Int, algorithm::String)::Int
     pixels = ""
     for new_row=(row-1):row+1
         for new_col=(col-1):(col+1)
-            pixels = pixels * safeGet(mat, new_row, new_col)
+            pixels = pixels * string(safeGet(mat, new_row, new_col))
         end
     end
     algorithm_index = 1 + binary2int(pixels)
-    println((pixels, algorithm_index, algorithm[algorithm_index]))
-    algorithm[algorithm_index]
+    # println((pixels, algorithm_index, algorithm[algorithm_index]))
+    (algorithm[algorithm_index] === '1') ? 1 : 0
 end
 
 
 function part1(algorithm::String, image::Array{Int})::Array{Int}
     # initialize empty matrix
-    new_image = zeros(Int, size(image))
+    new_size = (size(image, 1) + 1, size(image, 2) + 1)
+    new_image = zeros(Int, new_size)
     for i=1:size(new_image, 1)
         for j=1:size(new_image, 2)
-            new_image[i, j] = enhance(image, i, j, algorithm)
+            val = enhance(image, i, j, algorithm)
+            @assert val <= 1
+            new_image[i, j] =  val
         end
     end
     new_image
 end
 
 
-function translate(s::String)::String
-    s = replace(s, '.' => '0')
-    replace(s, '#' => 1)
-end
 
 
 function readImage(s::String)::Array{Int}
-    img = translate(s)
-    lines = split(img, "\n")
+    lines = split(s, "\n")
     out = zeros((length(lines), length(lines[1])))
     for (row, line) in enumerate(lines)
         for (col, c) in enumerate(line)
-            out[row, col] = c
+            out[row, col] = (c === '#') ? 1 : 0
         end
     end
     out
 end
 
 
+function prettyPrint(img::Array{Int})::String
+    out = ""
+    for row=1:size(img, 1)
+        for col=1:size(img, 2)
+            out = out * ((img[row, col] === 1) ? '#' : '.')
+        end
+        out *= "\n"
+    end
+    out
+end
+            
 
 
-algorithm="..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#"
-algorithm = translate(algorithm)
+algorithm="00101001111101010101110110000011101101001110111100111110010000100100110011100111111011100011110010011111001100101111100011010100101100101000000101110111111011101111000101101100100100111110000010100001110010110000001000001001001001100100011011111101111011110101000100000001001010100011110110100000010010001101011001000110101100111010000001010000000101010111101110110001000001111010010010110100001100101111000011000110010001000000101000000010000000110011110010001010100011001010011100111110000000010011110000001001"
 img = """#..#.
 #....
 ##..#
 ..#..
 ..###"""
-println(part1(algorithm, readImage(img)))
+output = part1(algorithm, readImage(img))
+println(prettyPrint(readImage(img)))
+println(prettyPrint(output))
