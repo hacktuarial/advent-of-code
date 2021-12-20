@@ -1,7 +1,8 @@
 class Snailfish:
-    def __init__(self, left, right):
+    def __init__(self, left, right, depth=0):
         self.left = left
         self.right = right
+        self.depth = depth
 
     def reduce(self):
         pass
@@ -22,13 +23,17 @@ class Snailfish:
 
 def read(string: str) -> Snailfish:
     numbers = []
+    depth = 0
     for s in string:
-        if s == "[" or s == ",":
+        if s == ",":
             continue
+        elif s == "[":
+            depth += 1
         elif s == "]":
             right = numbers.pop()
             left = numbers.pop()
-            numbers.append(Snailfish(left, right))
+            numbers.append(Snailfish(left, right, depth))
+            depth -= 1
         else:
             numbers.append(int(s))
     return numbers[0]
