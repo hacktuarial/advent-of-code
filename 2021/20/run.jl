@@ -27,14 +27,22 @@ function enhance(mat::Array{Int}, row::Int, col::Int, algorithm::String)::Int
     (algorithm[algorithm_index] === '1') ? 1 : 0
 end
 
+function pad(mat::Array{Int}, pad::Int)::Array{Int}
+    """ add 'pad' zeros on every side.
+    size -> (size + 2 * pad, size + 2*pad)
+    """
+    new_mat = zeros(size(mat, 1) + 2*pad, size(mat, 2) + 2*pad)
+    new_mat[1+pad:end-pad, 1+pad:end-pad] = copy(mat)
+    new_mat
+end
 
 function part1(algorithm::String, image::Array{Int})::Array{Int}
     # initialize empty matrix
-    new_size = (size(image, 1) + 1, size(image, 2) + 1)
-    new_image = zeros(Int, new_size)
+    padded_image = pad(image, 3)
+    new_image = zeros(Int, size(padded_image))
     for i=1:size(new_image, 1)
         for j=1:size(new_image, 2)
-            val = enhance(image, i, j, algorithm)
+            val = enhance(padded_image, i, j, algorithm)
             @assert val <= 1
             new_image[i, j] =  val
         end
@@ -76,6 +84,11 @@ img = """#..#.
 ##..#
 ..#..
 ..###"""
-output = part1(algorithm, readImage(img))
 println(prettyPrint(readImage(img)))
+# println(prettyPrint(pad(readImage(img), 1)))
+# println(prettyPrint(pad(readImage(img), 2)))
+output = part1(algorithm, readImage(img))
+output = part1(algorithm, output)
+println(sum(output))
+@assert sum(output) === 35
 println(prettyPrint(output))
