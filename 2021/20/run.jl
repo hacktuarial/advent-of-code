@@ -36,7 +36,7 @@ function pad(mat::Array{Int}, pad::Int)::Array{Int}
     new_mat
 end
 
-function part1(algorithm::String, image::Array{Int})::Array{Int}
+function doStep(algorithm::String, image::Array{Int})::Array{Int}
     # initialize empty matrix
     padded_image = pad(image, 3)
     new_image = zeros(Int, size(padded_image))
@@ -87,8 +87,24 @@ img = """#..#.
 println(prettyPrint(readImage(img)))
 # println(prettyPrint(pad(readImage(img), 1)))
 # println(prettyPrint(pad(readImage(img), 2)))
-output = part1(algorithm, readImage(img))
-output = part1(algorithm, output)
-println(sum(output))
+output = doStep(algorithm, readImage(img))
+output = doStep(algorithm, output)
 @assert sum(output) === 35
-println(prettyPrint(output))
+
+
+function readAlgorithm(algo::String)::String
+    replace(replace(algo, '#' => '1'), '.' => '0')
+end
+
+@assert readAlgorithm("###..#..") === "11100100"
+
+open("input.txt", "r") do f
+    lines = readlines(f)
+    algorithm = readAlgorithm(popfirst!(lines))
+    mat = join(lines[3:end], "\n")
+    mat = readImage(mat)
+    for _ in 1:2
+        mat = doStep(algorithm, mat)
+    end
+    println(sum(mat))
+end
