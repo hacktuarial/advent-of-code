@@ -1,3 +1,7 @@
+"""
+got some help from 
+https://www.reddit.com/r/adventofcode/comments/rkf5ek/comment/hpb2ar0/
+"""
 
 function prettyPrint(img::Array{Int})::String
     out = ""
@@ -117,12 +121,12 @@ open("input.txt", "r") do f
     algorithm = popfirst!(lines)
     mat = readImage(lines[2:end])
     @assert size(mat) === (100, 100)
-    mat = pad(mat, 11)
+    mat = pad(mat, 20)
     @assert minimum(mat) === 0
     @assert maximum(mat) === 1
     for _ in 1:50
-        println(size(mat))
         mat = doStep(algorithm, mat)
+        # whatever happens to the top-left corner is what happens to the "infinite" image
         mat = pad(mat, 2, withZero=mat[1, 1]==0)
     end
     println(sum(mat))
