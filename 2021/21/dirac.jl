@@ -93,6 +93,7 @@ end
 
 
 function update(outcomes::Dict{GameStatus, Int}, previousGame::GameStatus, newGame::GameStatus, n::Int)
+    # update in place
     try
         n += outcomes[previousGame]
     catch KeyError
@@ -104,11 +105,11 @@ function update(outcomes::Dict{GameStatus, Int}, previousGame::GameStatus, newGa
     catch KeyError
         outcomes[newGame] = n
     end
-    outcomes
 end
 
 const final_score = 21
 const rolls = Dict{Int, Int}(5 => 6, 4 => 3, 6 => 7, 7 => 6, 9 => 1, 8 => 3, 3 => 1)
+
 function part2(p1::Int, p2::Int)
     outcomes = Dict{GameStatus, Int}()
     # outcomes of rolling 3 fair 3-sided dice and adding them up
@@ -118,38 +119,37 @@ function part2(p1::Int, p2::Int)
     wins = [0, 0]
     while length(gamesToProcess) > 0
         oldGame = pop!(gamesToProcess)
-        @assert !oldGame.finished
         player = oldGame.is_player1_turn ? oldGame.player1 : oldGame.player2
         for roll in keys(rolls)
+            n::Int = outcomes[oldGame] + rolls[roll]
             new_player::Player = move(player, roll)
             finished = new_player.score >= final_score
             if oldGame.is_player1_turn
-                newGame = GameStatus(new_player, oldGame.player2, finished, false)
+                if finished
+                    wins[1] += n
+                    continue
+                else
+                    newGame = GameStatus(new_player, oldGame.player2, finished, false)
+                end
             else
-                newGame = GameStatus(oldGame.player1, new_player, finished, true)
+                # it was player 2's turn
+                if finished
+                    wins[2] += n
+                    continue
+                else
+                    newGame = GameStatus(oldGame.player1, new_player, finished, true)
+                end
             end
-            outcomes = update(outcomes, oldGame, newGame, rolls[roll])
-            if !finished
+            if haskey(outcomes, newGame)
+                outcomes[newGame] += n
+            else
                 push!(gamesToProcess, newGame)
+                outcomes[newGame] = n
             end
         end
-        # println(log10(sum(values(outcomes))))
-        println(length(gamesToProcess))
+        println(log10.(wins))
     end
-    # now, count up how many times each player won
-    # finished_games = filter(outcomes, (status, n_times) => (max(status.player1.score, status.player2.score >= final_score))
-    # println(outcomes)
-    p1 = 0
-    p2 = 0
-    for (key, value) in outcomes
-        if key.player1.score >= final_score
-            p1 += value
-        elseif key.player2.score >= final_score
-            p2 += value
-        end
-    end
-    println(p1)
-    println(p2)
+    println(wins)
 end
     
 
