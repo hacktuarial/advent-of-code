@@ -79,10 +79,9 @@ function tally()
             end
         end
     end
-    println(countmap(outcomes))
+    countmap(outcomes)
 end
 
-tally()
 
 
 struct GameStatus
@@ -93,17 +92,7 @@ end
 
 
 const final_score = 21
-const rolls = Dict{Int, Int}(5 => 6, 4 => 3, 6 => 7, 7 => 6, 9 => 1, 8 => 3, 3 => 1)
-
-function whoWon(game::GameStatus)::Int
-    if game.player1.score >= final_score
-        return 1
-    elseif game.player2.score >= final_score
-        return 2
-    else
-        return 0
-    end
-end
+const rolls = tally()
 
 
 function makeNeighbor(game::GameStatus, moves::Int)::GameStatus
@@ -115,38 +104,6 @@ function makeNeighbor(game::GameStatus, moves::Int)::GameStatus
     newGame
 end
 
-
-function part2bfs(p1::Int, p2::Int)
-    # this is all junk
-    visited = Dict{GameStatus, Int}()
-    queue = Queue{GameStatus}()
-    initial = GameStatus(Player(p1, 0), Player(p2, 0), true)
-    visited[initial] = 1
-    enqueue!(queue, initial)
-    wins = [0, 0]
-    while length(queue) > 0 & minimum(wins) < 444356092776315
-        game = dequeue!(queue)
-        winner = whoWon(game)
-        if winner > 0
-            wins[winner] += visited[game]
-            continue
-        end
-        for roll in keys(rolls)
-            n = rolls[roll]
-            neighbor = makeNeighbor(game, roll)
-            if haskey(visited, neighbor)
-                # it's already somewhere in the queue, just increase 
-                # how many times it's been visited
-                visited[neighbor] += n
-            else
-                visited[neighbor] = n
-                enqueue!(queue, neighbor)
-            end
-        end
-    end
-    println(sum(values(visited)))
-    wins
-end
 
 struct Wins
     wins1::Int
