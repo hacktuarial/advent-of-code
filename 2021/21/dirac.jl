@@ -88,6 +88,7 @@ struct GameStatus
     player1::Player
     player2::Player
     finished::Bool
+    is_player1_turn::Bool
 end
 
 
@@ -106,37 +107,34 @@ function update(outcomes::Dict{GameStatus, Int}, previousGame::GameStatus, newGa
     outcomes
 end
 
+const final_score = 21
+const rolls = Dict{Int, Int}(5 => 6, 4 => 3, 6 => 7, 7 => 6, 9 => 1, 8 => 3, 3 => 1)
 function part2(p1::Int, p2::Int)
-    final_score = 21
     outcomes = Dict{GameStatus, Int}()
     # outcomes of rolling 3 fair 3-sided dice and adding them up
-    rolls = Dict{Int, Int}(5 => 6, 4 => 3, 6 => 7, 7 => 6, 9 => 1, 8 => 3, 3 => 1)
-    outcomes[GameStatus(Player(p1, 0), Player(p2, 0), false)] = 1
-    updated = true
-    while updated
-        updated = false
-        for oldGame in keys(outcomes)
-            if oldGame.finished
-                continue
+    initial = GameStatus(Player(p1, 0), Player(p2, 0), false, true)
+    outcomes[initial] = 1
+    gamesToProcess = [initial, ]
+    wins = [0, 0]
+    while length(gamesToProcess) > 0
+        oldGame = pop!(gamesToProcess)
+        @assert !oldGame.finished
+        player = oldGame.is_player1_turn ? oldGame.player1 : oldGame.player2
+        for roll in keys(rolls)
+            new_player::Player = move(player, roll)
+            finished = new_player.score >= final_score
+            if oldGame.is_player1_turn
+                newGame = GameStatus(new_player, oldGame.player2, finished, false)
+            else
+                newGame = GameStatus(oldGame.player1, new_player, finished, true)
             end
-            for p1_roll in keys(rolls)
-                for p2_roll in keys(rolls)
-                    updated = true
-                    new_p1::Player = move(oldGame.player1, p1_roll)
-                    finished = new_p1.score >= final_score
-                    newGame = GameStatus(new_p1, oldGame.player2, finished)
-                    outcomes = update(outcomes, oldGame, newGame, rolls[p1_roll])
-                    if ! finished
-                        # player2 gets a turn
-                        new_p2::Player = move(oldGame.player2, p2_roll)
-                        finished = new_p2.score >= final_score
-                        newGame = GameStatus(new_p1, new_p2, finished)
-                        outcomes = update(outcomes, oldGame, newGame, rolls[p2_roll])
-                    end
-                end
+            outcomes = update(outcomes, oldGame, newGame, rolls[roll])
+            if !finished
+                push!(gamesToProcess, newGame)
             end
         end
-        println(sum(values(outcomes)))
+        # println(log10(sum(values(outcomes))))
+        println(length(gamesToProcess))
     end
     # now, count up how many times each player won
     # finished_games = filter(outcomes, (status, n_times) => (max(status.player1.score, status.player2.score >= final_score))
