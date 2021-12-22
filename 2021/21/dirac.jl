@@ -1,3 +1,5 @@
+# import Pkg; Pkg.add("DataStructures")
+using DataStructures;
 struct Player
     position::Int
     score::Int
@@ -60,7 +62,6 @@ end
 
 
 part1(4, 8)
-
 part1(4, 9)
 
 
@@ -87,71 +88,94 @@ tally()
 struct GameStatus
     player1::Player
     player2::Player
-    finished::Bool
     is_player1_turn::Bool
 end
 
 
-function update(outcomes::Dict{GameStatus, Int}, previousGame::GameStatus, newGame::GameStatus, n::Int)
-    # update in place
-    try
-        n += outcomes[previousGame]
-    catch KeyError
-        # do nothing
-    end
-
-    try
-        outcomes[newGame] += n
-    catch KeyError
-        outcomes[newGame] = n
-    end
-end
-
 const final_score = 21
 const rolls = Dict{Int, Int}(5 => 6, 4 => 3, 6 => 7, 7 => 6, 9 => 1, 8 => 3, 3 => 1)
 
-function part2(p1::Int, p2::Int)
-    outcomes = Dict{GameStatus, Int}()
-    # outcomes of rolling 3 fair 3-sided dice and adding them up
-    initial = GameStatus(Player(p1, 0), Player(p2, 0), false, true)
-    outcomes[initial] = 1
-    gamesToProcess = [initial, ]
+function whoWon(game::GameStatus)::Int
+    if game.player1.score >= final_score
+        return 1
+    elseif game.player2.score >= final_score
+        return 2
+    else
+        return 0
+    end
+end
+
+
+function makeNeighbor(game::GameStatus, moves::Int)::GameStatus
+    if game.is_player1_turn
+        newGame = GameStatus(move(game.player1, moves), game.player2, false)
+    else
+        newGame = GameStatus(game.player1, move(game.player2, moves), true)
+    end
+    newGame
+end
+
+
+function part2bfs(p1::Int, p2::Int)
+    # this is all junk
+    visited = Dict{GameStatus, Int}()
+    queue = Queue{GameStatus}()
+    initial = GameStatus(Player(p1, 0), Player(p2, 0), true)
+    visited[initial] = 1
+    enqueue!(queue, initial)
     wins = [0, 0]
-    while length(gamesToProcess) > 0
-        oldGame = pop!(gamesToProcess)
-        player = oldGame.is_player1_turn ? oldGame.player1 : oldGame.player2
+    while length(queue) > 0 & minimum(wins) < 444356092776315
+        game = dequeue!(queue)
+        winner = whoWon(game)
+        if winner > 0
+            wins[winner] += visited[game]
+            continue
+        end
         for roll in keys(rolls)
-            n::Int = outcomes[oldGame] + rolls[roll]
-            new_player::Player = move(player, roll)
-            finished = new_player.score >= final_score
-            if oldGame.is_player1_turn
-                if finished
-                    wins[1] += n
-                    continue
-                else
-                    newGame = GameStatus(new_player, oldGame.player2, finished, false)
-                end
+            n = rolls[roll]
+            neighbor = makeNeighbor(game, roll)
+            if haskey(visited, neighbor)
+                # it's already somewhere in the queue, just increase 
+                # how many times it's been visited
+                visited[neighbor] += n
             else
-                # it was player 2's turn
-                if finished
-                    wins[2] += n
-                    continue
-                else
-                    newGame = GameStatus(oldGame.player1, new_player, finished, true)
-                end
-            end
-            if haskey(outcomes, newGame)
-                outcomes[newGame] += n
-            else
-                push!(gamesToProcess, newGame)
-                outcomes[newGame] = n
+                visited[neighbor] = n
+                enqueue!(queue, neighbor)
             end
         end
-        println(log10.(wins))
     end
-    println(wins)
+    println(sum(values(visited)))
+    wins
 end
-    
 
-part2(4, 8)
+struct Wins
+    wins1::Int
+    wins2::Int
+end
 
+function repeat(wins::Wins, n::Int)
+    Wins(n * wins.wins1, n * wins.wins2)
+end
+
+function add(left::Wins, right::Wins)::Wins
+    Wins(left.wins1 + right.wins1, left.wins2 + right.wins2)
+end
+
+function part2recursive(game::GameStatus)::Wins
+    # structure based on https://github.com/ClouddJR/AdventOfCode2021/blob/master/src/main/kotlin/com/clouddjr/advent2021/Day21.kt
+    if game.player1.score >= final_score
+        return Wins(1, 0)
+    elseif game.player2.score >= final_score
+        return Wins(0, 1)
+    end
+    wins = Wins(0, 0)
+    for (roll, n) in rolls
+        wins = add(wins, repeat(part2recursive(makeNeighbor(game, roll)), n))
+    end
+    wins
+end
+
+
+
+initial = GameStatus(Player(4, 0), Player(9, 0), true)
+println(part2recursive(initial))
