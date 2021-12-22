@@ -87,6 +87,7 @@ tally()
 struct GameStatus
     player1::Player
     player2::Player
+    finished::Bool
 end
 
 
@@ -110,34 +111,32 @@ function part2(p1::Int, p2::Int)
     outcomes = Dict{GameStatus, Int}()
     # outcomes of rolling 3 fair 3-sided dice and adding them up
     rolls = Dict{Int, Int}(5 => 6, 4 => 3, 6 => 7, 7 => 6, 9 => 1, 8 => 3, 3 => 1)
-    outcomes[GameStatus(Player(p1, 0), Player(p2, 0))] = 1
-    iter = 0
-    while true
-        iter += 1
-        n_before = sum(values(outcomes))
+    outcomes[GameStatus(Player(p1, 0), Player(p2, 0), false)] = 1
+    updated = true
+    while updated
+        updated = false
         for oldGame in keys(outcomes)
+            if oldGame.finished
+                continue
+            end
             for p1_roll in keys(rolls)
                 for p2_roll in keys(rolls)
-                    if max(oldGame.player1.score, oldGame.player2.score) >= final_score
-                        continue
-                    end
+                    updated = true
                     new_p1::Player = move(oldGame.player1, p1_roll)
-                    newGame = GameStatus(new_p1, oldGame.player2)
+                    finished = new_p1.score >= final_score
+                    newGame = GameStatus(new_p1, oldGame.player2, finished)
                     outcomes = update(outcomes, oldGame, newGame, rolls[p1_roll])
-                    if new_p1.score < final_score
+                    if ! finished
                         # player2 gets a turn
                         new_p2::Player = move(oldGame.player2, p2_roll)
-                        newGame = GameStatus(new_p1, new_p2)
+                        finished = new_p2.score >= final_score
+                        newGame = GameStatus(new_p1, new_p2, finished)
                         outcomes = update(outcomes, oldGame, newGame, rolls[p2_roll])
                     end
                 end
             end
         end
-        n_after = sum(values(outcomes))
-        println(n_after)
-        if n_before === n_after
-            break
-        end
+        println(sum(values(outcomes)))
     end
     # now, count up how many times each player won
     # finished_games = filter(outcomes, (status, n_times) => (max(status.player1.score, status.player2.score >= final_score))
