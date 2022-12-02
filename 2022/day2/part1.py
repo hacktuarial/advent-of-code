@@ -3,37 +3,51 @@ from enum import Enum
 
 class Paper:
     score = 2
+
     def __eq__(self, other):
         return isinstance(other, Paper)
+
     def __lt__(self, other):
         return isinstance(other, Scissors)
-    def __gt__(self,other):
+
+    def __gt__(self, other):
         return isinstance(other, Rock)
+
 
 class Scissors:
     score = 3
+
     def __eq__(self, other):
         return isinstance(other, Scissors)
+
     def __lt__(self, other):
         return isinstance(other, Rock)
-    def __gt__(self,other):
+
+    def __gt__(self, other):
         return isinstance(other, Paper)
+
 
 class Rock:
     score = 1
+
     def __eq__(self, other):
         return isinstance(other, Rock)
+
     def __lt__(self, other):
         return isinstance(other, Paper)
-    def __gt__(self,other):
+
+    def __gt__(self, other):
         return isinstance(other, Scissors)
 
 
-lookup = {"A": Rock(), "B": Paper(), "C": Scissors(),
-        "X": Rock(),
-          "Y": Paper(),
-          "Z": Scissors()}
-
+lookup = {
+    "A": Rock(),
+    "B": Paper(),
+    "C": Scissors(),
+    "X": Rock(),
+    "Y": Paper(),
+    "Z": Scissors(),
+}
 
 
 def score(opponent, me) -> int:
