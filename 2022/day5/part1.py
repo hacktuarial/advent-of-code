@@ -52,13 +52,18 @@ def run(fname):
                 stack.push(element)
     moves = [parse_move(mv) for mv in lines[sep + 1 :]]
     for move in moves:
-        for _ in range(move.how_many):
+        if move.how_many == 1:
             moving = stacks[move.from_stack].pop()
             stacks[move.to_stack].push(moving)
+        else:
+            moving = [stacks[move.from_stack].pop() for _ in range(move.how_many)]
+            moving = moving[::-1]
+            for crate in moving:
+                stacks[move.to_stack].push(crate)
     return "".join([stack.pop() for stack in stacks])
 
 
-assert "CMZ" == run("sample.txt")
+assert "MCD" == run("sample.txt")
 
 if __name__ == "__main__":
     print(run(sys.argv[1]))
