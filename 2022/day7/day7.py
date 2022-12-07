@@ -10,6 +10,9 @@ class File:
     size: int
     name: str  # not needed
 
+    def __repr__(self):
+        return f"{self.name} (file, size={self.size})"
+
 
 @dataclass
 class Directory:
@@ -31,6 +34,14 @@ class Directory:
             raise ValueError(f"{name} already present")
         self.children[name] = directory
 
+    def __repr__(self):
+        output = "\n"
+        for file in self.files:
+            output += f"{file}\n"
+        for child in self.children.values():
+            output += f"{child}\n"
+        return output
+
 
 def parse_input(instructions):
     root = Directory(name="/", parent=None, files=[], children={})
@@ -38,65 +49,72 @@ def parse_input(instructions):
     i = 1
     while i < len(instructions):
         line = instructions[i]
-        is_command = line.startswith("$")
-        if is_command:
-            # could be cd or ls
-            if "ls" in line.split():
-                # ls: add files and children to node
-                i += 1
-                line = instructions[i]
-                logging.debug(line)
-                while not line.startswith("$"):
-                    if line.startswith("dir"):
-                        name = line.split()[-1]
-                        directory = Directory(
-                            name=name, files=[], children={}, parent=node
-                        )
-                        logging.debug("Adding a child directory %s", directory)
-                        node.addChild(
-                            name=name,
-                            directory=directory,
-                        )
-                    else:
-                        size, name = line.split()
-                        file = File(size=int(size), name=name)
-                        logging.debug("adding a file %s", file)
-                        node.addFile(file)
-                    i += 1
-                    line = instructions[i]
-
-            else:
-                # cd: change node
-                target = line.split()[-1]
-                if target == "..":
-                    node = node.parent
-                else:
-                    # change into a subdirectory
-                    logging.debug("Moving into %s", node.name + "/" + target)
-                    try:
-                        node = node.children[target]
-                    except KeyError as e:
-                        raise ValueError(line)
+        assert line.startswith("$")
+        # could be cd or ls
+        if "ls" in line.split():
+            # ls: add files and children to node
             i += 1
             line = instructions[i]
-                            
-
+            while not line.startswith("$"):
+                if line.startswith("dir"):
+                    # add a directory to node
+                    name = line.split()[-1]
+                    directory = Directory(name=name, files=[], children={}, parent=node)
+                    logging.debug("adding a child directory %s to %s", name, node.name)
+                    node.addChild(
+                        name=name,
+                        directory=directory,
+                    )
+                else:
+                    # add a file to node
+                    size, name = line.split()
+                    file = File(size=int(size), name=name)
+                    logging.debug("adding a file %s to %s", file, node.name)
+                    node.addFile(file)
+                # go on to the next line
+                i += 1
+                try:
+                    line = instructions[i]
+                except IndexError:
+                    # reached end of file
+                    break
+        else:
+            # cd: change node
+            target = line.split()[-1]
+            if target == "..":
+                node = node.parent
+            else:
+                # change into a subdirectory
+                logging.debug("Moving into %s", node.name + "/" + target)
+                node = node.children[target]
+            i += 1
     return root
 
 
-def add_up_sizes(directory, running_total, threshold=100_000):
-    if directory.size() <= threshold:
-        running_total += directory.size()
-    for child in directory.children.values():
-        running_total += add_up_sizes(child, running_total, threshold)
-    return running_total
+def add_up_sizes(directory, threshold=100_000):
+    size = directory.size()
+    if size > threshold:
+        size = 0
+    return size + sum(
+        add_up_sizes(child, threshold) for child in directory.children.values()
+    )
 
 
 if __name__ == "__main__":
     fname = "sample.txt"  # sys.argv[1]
-    logging.debug(fname)
     with open(fname, "r") as f:
         instructions = f.readlines()
     root = parse_input(instructions)
-    total_size = add_up_sizes(root, 0, 100_000)
-    print(total_size)
+    assert root.size() == 48381165
+    assert root.children["d"].size() == 24933642
+    assert root.children["a"].children["e"].size() == 584
+    assert root.children["a"].size() == 94853
+    total_size = add_up_sizes(root, 100_000)
+    assert total_size == 95437, total_size
+
+    # part 1
+    fname = "input.txt"
+    with open(fname, "r") as f:
+        instructions = f.readlines()
+    root = parse_input(instructions)
+    print(add_up_sizes(root, 100_000))
