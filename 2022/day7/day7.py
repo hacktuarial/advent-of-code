@@ -2,7 +2,7 @@ from typing import List, Dict
 from dataclasses import dataclass
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 @dataclass
@@ -100,6 +100,18 @@ def add_up_sizes(directory, threshold=100_000):
     )
 
 
+def find_min_viable_node(node, current_free_space, required_free_space, min_so_far):
+    size = node.size()
+    free_space = current_free_space + size
+    if free_space >= required_free_space and size < min_so_far:
+        min_so_far = size
+    for child in node.children.values():
+        min_so_far = find_min_viable_node(
+            child, current_free_space, required_free_space, min_so_far
+        )
+    return min_so_far
+
+
 if __name__ == "__main__":
     fname = "sample.txt"  # sys.argv[1]
     with open(fname, "r") as f:
@@ -112,9 +124,25 @@ if __name__ == "__main__":
     total_size = add_up_sizes(root, 100_000)
     assert total_size == 95437, total_size
 
-    # part 1
+    # sample, part2
+    capacity = 70_000_000
+    required_free_space = 30_000_000
+    current_free_space = capacity - root.size()
+    min_ = find_min_viable_node(
+        root, current_free_space, required_free_space, root.size()
+    )
+    logging.info("the smallest directory to delete has size %d", min_)
+
+    # real input, part 1
     fname = "input.txt"
     with open(fname, "r") as f:
         instructions = f.readlines()
     root = parse_input(instructions)
-    print(add_up_sizes(root, 100_000))
+    logging.info("part 1 = %d", add_up_sizes(root, 100_000))
+
+    # real input, part 2
+    current_free_space = capacity - root.size()
+    min_ = find_min_viable_node(
+        root, current_free_space, required_free_space, root.size()
+    )
+    logging.info("part 2 = %d", min_)
