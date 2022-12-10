@@ -103,8 +103,8 @@ def max_scenic_score(mat):
         for j in range(1, len(mat[0]) - 1):
             score = scenic_score(mat, i, j)
             if score > max_score:
-                logging.debug("Found new max score of %d at (%d, %d)", max_score, i, j)
                 max_score = score
+                logging.debug("Found new max score of %d at (%d, %d)", max_score, i, j)
     return max_score
 
 
