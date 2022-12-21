@@ -69,7 +69,7 @@ class BreadthFirstSearch:
                     self.visited[neighbor] = True
                     self.path_length[neighbor] = self.path_length[point] + 1
                     self.to_visit.append(neighbor)
-        raise ValueError("end not found")
+        return np.inf
 
 
 def read(fname):
@@ -85,9 +85,10 @@ def read(fname):
     return X
 
 
-def solve(fname):
+def solve(fname, start=None):
     mat = read(fname)
-    solver = BreadthFirstSearch(X=mat, start=find_char(mat, "S"))
+    start = start or find_char(mat, "S")
+    solver = BreadthFirstSearch(X=mat, start=start)
     return solver.run()
 
 
@@ -97,3 +98,13 @@ if __name__ == "__main__":
 
     part1 = solve("input.txt")
     print(part1)
+
+    # part 2
+    best_solution = np.inf
+    mat = read("input.txt")
+    for i in range(mat.shape[0]):
+        for j in range(mat.shape[1]):
+            if mat[i, j] == "a":
+                this_solution = BreadthFirstSearch(X=mat, start=(i, j)).run()
+                best_solution = min(best_solution, this_solution)
+    print(best_solution)
