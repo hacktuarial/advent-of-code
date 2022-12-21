@@ -1,8 +1,5 @@
 """
-TODO use breadth first search
-instead of
-depth first search
-BFS is guaranteed to find the shortest path
+Breadth First Search is guaranteed to find the shortest path
 """
 
 import pdb
@@ -10,10 +7,11 @@ from typing import List, Tuple
 from string import ascii_lowercase
 import numpy as np
 
+
 def find_char(X, ch):
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
-            if X[i, j] ==ch:
+            if X[i, j] == ch:
                 return (i, j)
     raise ValueError
 
@@ -51,23 +49,27 @@ def get_neighbors(X, i, j) -> List[Tuple[int, int]]:
     return res
 
 
-class DepthFirstSearch:
+class BreadthFirstSearch:
     def __init__(self, X, start):
         self.X = X
-        self.visited = np.ones_like(X, dtype=float) * np.inf
-        self.start = start
+        self.visited = np.zeros_like(X, dtype=bool)
+        self.path_length = np.ones_like(X, dtype=float) * np.inf
+        self.path_length[start] = 0
+        self.to_visit = [
+            start,
+        ]
 
     def run(self):
-        self.visit(self.start, 0)
-        loc = find_char(self.X, "E")
-        return self.visited[loc]
-
-    def visit(self, point, path_length) -> int:
-        if path_length < self.visited[point]:
-            self.visited[point] = path_length
-        for neighbor in get_neighbors(self.X, *point):
-            if path_length + 1 <= self.visited[neighbor]:
-                self.visit(neighbor, path_length + 1)
+        while len(self.to_visit) > 0:
+            point = self.to_visit.pop(0)
+            if self.X[point] == "E":
+                return self.path_length[point]
+            for neighbor in get_neighbors(self.X, *point):
+                if not self.visited[neighbor]:
+                    self.visited[neighbor] = True
+                    self.path_length[neighbor] = self.path_length[point] + 1
+                    self.to_visit.append(neighbor)
+        raise ValueError("end not found")
 
 
 def read(fname):
@@ -82,15 +84,16 @@ def read(fname):
             X[i, j] = mat[i][j]
     return X
 
+
 def solve(fname):
     mat = read(fname)
-    solver = DepthFirstSearch(X=mat, start=find_char(mat, "S"))
+    solver = BreadthFirstSearch(X=mat, start=find_char(mat, "S"))
     return solver.run()
 
 
 if __name__ == "__main__":
     sample = solve("sample.txt")
-    assert sample == 31
+    assert sample == 31, sample
 
     part1 = solve("input.txt")
     print(part1)
