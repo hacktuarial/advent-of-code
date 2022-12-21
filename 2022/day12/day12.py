@@ -52,7 +52,6 @@ def get_neighbors(X, i, j) -> List[Tuple[int, int]]:
 class BreadthFirstSearch:
     def __init__(self, X, start):
         self.X = X
-        self.visited = np.zeros_like(X, dtype=bool)
         self.path_length = np.ones_like(X, dtype=float) * np.inf
         self.path_length[start] = 0
         self.to_visit = [
@@ -65,8 +64,8 @@ class BreadthFirstSearch:
             if self.X[point] == "E":
                 return self.path_length[point]
             for neighbor in get_neighbors(self.X, *point):
-                if not self.visited[neighbor]:
-                    self.visited[neighbor] = True
+                if self.path_length[neighbor] == np.inf:
+                    # this neighbor has not been visited
                     self.path_length[neighbor] = self.path_length[point] + 1
                     self.to_visit.append(neighbor)
         return np.inf
