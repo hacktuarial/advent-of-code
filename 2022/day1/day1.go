@@ -1,12 +1,12 @@
 package main
 
 import (
-    "bufio"
-    "fmt"
-    "log"
-    "os"
-	"strconv"
+	"bufio"
+	"fmt"
+	"log"
+	"os"
 	"sort"
+	"strconv"
 )
 
 func makeArray(k int) []int {
@@ -15,34 +15,34 @@ func makeArray(k int) []int {
 }
 
 func day1(filename string, topK int) int {
-    file, err := os.Open(filename)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer file.Close()
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
 
-    scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(file)
 	var max = makeArray(topK)
 	runningTotal := 0
-    for scanner.Scan() {
+	for scanner.Scan() {
 		// fmt.Println(runningTotal)
-        txt := scanner.Text()
-		if (txt == "") {
-			if (runningTotal > max[0]) {
+		txt := scanner.Text()
+		if txt == "" {
+			if runningTotal > max[0] {
 				max[0] = runningTotal
 				// not sure why I need a slice here
-				sort.Ints(max[:])	
-			}	
+				sort.Ints(max[:])
+			}
 			runningTotal = 0
 		} else {
 			intVar, _ := strconv.Atoi(txt)
 			runningTotal += intVar
 		}
-    }
+	}
 
-    if err := scanner.Err(); err != nil {
-        log.Fatal(err)
-    }
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
 	total := 0
 	for _, v := range max {
 		total += v
@@ -53,13 +53,13 @@ func day1(filename string, topK int) int {
 func main() {
 	// part 1
 	answer := day1("sample.txt", 1)
-	if (answer != 24000) {
+	if answer != 24000 {
 		panic("wrong answer to sample problem, part1")
 	}
 	fmt.Println(day1("input.txt", 1))
 	// part 2
 	answer = day1("sample.txt", 3)
-	if (answer != 45000) {
+	if answer != 45000 {
 		panic("wrong answer to sample problem, part2")
 	}
 	fmt.Println(day1("input.txt", 3))
