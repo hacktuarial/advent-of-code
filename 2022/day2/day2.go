@@ -1,73 +1,68 @@
-package day2
+package main
 
 import (
 	"bufio"
 	"fmt"
 	"log"
 	"os"
-	"sort"
-	"strconv"
+	"strings"
 )
-
 
 // rock, paper, scissors
 
 func getPosition(arr []string, target string) int {
 	for i, v := range arr {
-		if (v == target) {
+		if v == target {
 			return i
 		}
 	}
-	return -1
+	panic("could not find the value")
 }
 
 func absValue(x int) int {
-	if (x > 0) {
+	if x > 0 {
 		return x
 	} else {
 		return -x
 	}
 }
 
-func play(self int, opponent int) int {
+func play(opponent int, self int) int {
 	// -1 lose, 0 draw, 1 win
 	diff := self - opponent
-	if (diff == 0) {
+	if diff == 0 {
 		return 0
 	} else if absValue(diff) == 1 {
-		return -diff
+		return diff
 	} else {
-		return -1
+		if diff < 0 {
+			return 1
+		} else {
+			return -1
+		}
 	}
 }
-
 
 func score(opponent string, self string) int {
 	// rock, paper, scissors
-	SELF := [4]string{"0", "A", "B", "C"}
-	OPPONENT := [4]string{"0", "X", "Y", "Z"}
+	OPPONENT := [4]string{"0", "A", "B", "C"}
+	SELF := [4]string{"0", "X", "Y", "Z"}
 	selfInt := getPosition(SELF[:], self)
 	oppInt := getPosition(OPPONENT[:], opponent)
-	if (selfInt == oppInt) {
+	gameOutcome := play(oppInt, selfInt)
+	if gameOutcome == 0 {
 		// draw
-		return 3 + selfInt;
-	} else if (selfInt < oppInt) {
+		return 3 + selfInt
+	} else if gameOutcome < 0 {
 		// lose
-		return selfInt;
+		return 0 + selfInt
 	} else {
 		// win
-		return 6 + selfInt;
+		return 6 + selfInt
 	}
-
-
 }
 
-func makeArray(k int) []int {
-	// return [k]int; this doesn't work!
-	return make([]int, k)
-}
-
-func day1(filename string, topK int) int {
+func day2(filename string, topK int) int {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -75,45 +70,26 @@ func day1(filename string, topK int) int {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	var max = makeArray(topK)
-	runningTotal := 0
+	totalScore := 0
 	for scanner.Scan() {
 		// fmt.Println(runningTotal)
 		txt := scanner.Text()
-		if txt == "" {
-			if runningTotal > max[0] {
-				max[0] = runningTotal
-				// not sure why I need a slice here
-				sort.Ints(max[:])
-			}
-			runningTotal = 0
-		} else {
-			intVar, _ := strconv.Atoi(txt)
-			runningTotal += intVar
-		}
+		arr := strings.Split(txt, " ")
+		totalScore += score(arr[0], arr[1])
+		// fmt.Println(totalScore)
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	total := 0
-	for _, v := range max {
-		total += v
-	}
-	return total
+	return totalScore
 }
 
 func main() {
 	// part 1
-	answer := day1("sample.txt", 1)
-	if answer != 24000 {
+	answer := day2("sample.txt", 1)
+	if answer != 15 {
 		panic("wrong answer to sample problem, part1")
 	}
-	fmt.Println(day1("input.txt", 1))
-	// part 2
-	answer = day1("sample.txt", 3)
-	if answer != 45000 {
-		panic("wrong answer to sample problem, part2")
-	}
-	fmt.Println(day1("input.txt", 3))
+	fmt.Println(day2("input.txt", 1))
 }
