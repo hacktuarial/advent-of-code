@@ -19,3 +19,15 @@ func TestFindOverlap(t *testing.T) {
 	s2 = strings.Split("ef", "")
 	assert.Equal("e", findOverlap(s1, s2))
 }
+
+func TestOverlap3(t *testing.T) {
+	assert := assert.New(t)
+	actual := findOverlap3("vJrwpWtwJgWrhcsFMMfFFhFp",
+		"jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+		"PmmdzqPrVvPwwTWBwg")
+	assert.Equal(actual, "r")
+	actual = findOverlap3("wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+		"ttgJtRGJQctTZtZT",
+		"CrZsJsPPZsGzwwsLwLmpwMDw")
+	assert.Equal(actual, "Z")
+}
