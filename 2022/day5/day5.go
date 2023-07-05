@@ -53,13 +53,25 @@ func initializeFull() []Stack {
 
 func move(from int, to int, stacks []Stack) {
 	stacks[to].Push(stacks[from].Pop())
-	for i, stack := range stacks {
-		msg := "stack " + strconv.FormatInt(int64(i), 10) + " has " + strconv.FormatInt(int64(stack.Len()), 10) + " elements"
-		// fmt.Println(msg)
+	// for i, stack := range stacks {
+	// 	msg := "stack " + strconv.FormatInt(int64(i), 10) + " has " + strconv.FormatInt(int64(stack.Len()), 10) + " elements"
+	// 	// fmt.Println(msg)
+	// }
+}
+
+func moveMany(from int, to int, howMany int, stacks []Stack) {
+	// use stacks[0] as temporary storage
+	// pop them all
+	for i := 0; i < howMany; i++ {
+		stacks[0].Push(stacks[from].Pop())
+	}
+	// push them all
+	for i := 0; i < howMany; i++ {
+		stacks[to].Push(stacks[0].Pop())
 	}
 }
 
-func part1(filename string, isSample bool) string {
+func day5(filename string, isSample bool, part1 bool) string {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -81,9 +93,13 @@ func part1(filename string, isSample bool) string {
 		howMany, _ := strconv.Atoi(strings.Split(txt, " ")[1])
 		from, _ := strconv.Atoi(strings.Split(txt, " ")[3])
 		to, _ := strconv.Atoi(strings.Split(txt, " ")[5])
-		for i := 0; i < howMany; i++ {
-			// use a slice!
-			move(from, to, stacks[:])
+		if part1 {
+			for i := 0; i < howMany; i++ {
+				// use a slice!
+				move(from, to, stacks[:])
+			}
+		} else {
+			moveMany(from, to, howMany, stacks)
 		}
 	}
 
@@ -96,17 +112,17 @@ func part1(filename string, isSample bool) string {
 
 func main() {
 	// part 1
-	answer := part1("sample.txt", true)
+	answer := day5("sample.txt", true, true)
 	if answer != "CMZ" {
 		panic("wrong answer to sample problem, part1")
 	}
-	fmt.Println(part1("input.txt", false))
+	fmt.Println("the answer to part1 is " + day5("input.txt", false, true))
 	// part 2
-	// answer = part2("sample.txt")
-	// if answer != 4 {
-	// 	panic("wrong answer to sample problem, part2")
-	// }
-	// fmt.Println(part2("input.txt"))
+	answer = day5("sample.txt", true, false)
+	if answer != "MCD" {
+		panic("wrong answer to sample problem, part2")
+	}
+	fmt.Println("the answer to part2 is " + day5("input.txt", false, false))
 }
 
 // https://github.com/golang-collections/collections/blob/master/stack/stack.go
