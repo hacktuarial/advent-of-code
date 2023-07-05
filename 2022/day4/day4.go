@@ -22,6 +22,11 @@ func isFullyContained(left elf, right elf) bool {
 	return leftInRight || rightInLeft
 }
 
+func anyOverlap(left elf, right elf) bool {
+	return ((left.low <= right.low && left.high >= right.low) ||
+		(right.low <= left.low && right.high >= left.low))
+}
+
 func makeElf(str string) elf {
 	both := strings.Split(str, "-")
 	low, _ := strconv.Atoi(both[0])
@@ -37,7 +42,7 @@ func makeElves(str0 string) []elf {
 	return out
 }
 
-func day4(filename string, topK int) int {
+func part1(filename string) int {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -54,18 +59,35 @@ func day4(filename string, topK int) int {
 	}
 	return total
 }
+func part2(filename string) int {
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	total := 0
+	for scanner.Scan() {
+		txt := scanner.Text()
+		elves := makeElves(txt)
+		if anyOverlap(elves[0], elves[1]) {
+			total++
+		}
+	}
+	return total
+}
 
 func main() {
 	// part 1
-	answer := day4("sample.txt", 1)
+	answer := part1("sample.txt")
 	if answer != 2 {
 		panic("wrong answer to sample problem, part1")
 	}
-	fmt.Println(day4("input.txt", 1))
+	fmt.Println(part1("input.txt"))
 	// part 2
-	// answer = day1("sample.txt", 3)
-	// if answer != 45000 {
-	// 	panic("wrong answer to sample problem, part2")
-	// }
-	// fmt.Println(day1("input.txt", 3))
+	answer = part2("sample.txt")
+	if answer != 4 {
+		panic("wrong answer to sample problem, part2")
+	}
+	fmt.Println(part2("input.txt"))
 }
