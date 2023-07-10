@@ -19,16 +19,16 @@ func allDifferent(str string) bool {
 	return allDifferent(str[1:])
 }
 
-func findMarker(str string) int {
-	for i := 0; i+4 < len(str); i++ {
-		if allDifferent(str[i : i+4]) {
-			return i + 4
+func findMarker(str string, k int) int {
+	for i := 0; i+k < len(str); i++ {
+		if allDifferent(str[i : i+k]) {
+			return i + k
 		}
 	}
 	return -1
 }
 
-func day6(filename string) int {
+func day6(filename string, k int) int {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +37,7 @@ func day6(filename string) int {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		txt := scanner.Text()
-		return findMarker(txt)
+		return findMarker(txt, k)
 	}
 	panic("panic")
 }
@@ -45,9 +45,10 @@ func day6(filename string) int {
 func main() {
 	// part 1
 	fmt.Println("the answer to part1 is ")
-	fmt.Println(day6("input.txt"))
+	fmt.Println(day6("input.txt", 4))
 	// part 2
-	// answer = day5("sample.txt", true, false)
+	fmt.Println("the answer to part2 is ")
+	fmt.Println(day6("input.txt", 14))
 	// if answer != "MCD" {
 	// 	panic("wrong answer to sample problem, part2")
 	// }
