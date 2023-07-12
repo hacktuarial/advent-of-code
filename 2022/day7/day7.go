@@ -59,7 +59,7 @@ func isLS(line string) bool {
 	return line[:4] == "$ ls"
 }
 
-func day7(filename string) int {
+func day7(filename string, part1 bool) int {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -133,27 +133,42 @@ func day7(filename string) int {
 
 	}
 	sizes := root.sizes()
+	// part 1
 	total := 0
 	for _, size := range sizes {
 		if size < 100000 {
 			total += size
 		}
 	}
-	return total
+	if part1 {
+		return total
+	}
+	// part 2
+	freeSpace := 70000000 - root.size()
+	requiredFreeSpace := 30000000
+	minSoFar := root.size()
+	for _, size := range sizes {
+		newFreeSpace := freeSpace + size
+		if newFreeSpace >= requiredFreeSpace {
+			if size < minSoFar {
+				minSoFar = size
+			}
+		}
+	}
+	return minSoFar
 }
 
 func main() {
 	// part 1
-	if day7("sample.txt") != 95437 {
+	if day7("sample.txt", true) != 95437 {
 		panic("wrong answer to sample")
 	}
 	fmt.Println("the answer to part1 is ")
-	fmt.Println(day7("input.txt"))
+	fmt.Println(day7("input.txt", true))
 	// part 2
-	// fmt.Println("the answer to part2 is ")
-	// fmt.Println(day6("input.txt", 14))
-	// if answer != "MCD" {
-	// 	panic("wrong answer to sample problem, part2")
-	// }
-	// fmt.Println("the answer to part2 is " + day5("input.txt", false, false))
+	if day7("sample.txt", false) != 24933642 {
+		panic("Wrong answer to sample problem, part 2")
+	}
+	fmt.Println("the answer to part2 is ")
+	fmt.Println(day7("input.txt", false))
 }
