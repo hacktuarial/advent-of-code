@@ -58,6 +58,8 @@ func countLeft(X [][]int, row int, col int) int {
 	var k int
 	for k = 1; col-k > 0 && X[row][col-k] < X[row][col]; k++ {
 	}
+	// if we never found a too-tall tree, then col-k==0, i.e. k==col
+	// so if col==3, you saw 3 trees at positions 2, 1, and 0
 	return k
 }
 
@@ -87,7 +89,6 @@ func scenicScore(X [][]int, row int, col int) int {
 	right := countRight(X, row, col)
 	up := countUp(X, row, col)
 	down := countDown(X, row, col)
-	fmt.Println(row, col, left, up, right, down)
 	return up * left * right * down
 }
 
@@ -150,8 +151,15 @@ func main() {
 	fmt.Println("the answer to part 1 is ")
 	fmt.Println(part1("input.txt"))
 
-	answer = part2("sample.txt")
-	fmt.Println(answer)
+	if part2("sample.txt") != 8 {
+		panic("wrong answer to sample input for part2")
+	}
 	fmt.Println("the answer to part 2 is ")
 	fmt.Println(part2("input.txt"))
+
+	// how exactly do for loops work?
+	var k int
+	for k = 0; k < 10; k++ {
+	}
+	// after the loop, k==10
 }
