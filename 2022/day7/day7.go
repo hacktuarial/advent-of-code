@@ -24,11 +24,11 @@ func (dir Directory) size() int {
 	return size
 }
 
-func (dir *Directory) addChild(child *Directory) {
+func (dir Directory) addChild(child *Directory) {
 	dir.children = append(dir.children, child)
 }
 
-func (dir *Directory) addFile(filesize int) {
+func (dir Directory) addFile(filesize int) {
 	dir.files += filesize
 }
 
@@ -55,8 +55,8 @@ func day7(filename string) int {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	var root Directory
-	var currentDir *Directory
-	root = Directory{name: "/", parent: nil, children: make([]Directory, 0), files: 0}
+	var currentDir *Directory // currentDir is a pointer
+	root = Directory{name: "/", parent: nil, children: make([]*Directory, 0), files: 0}
 	currentDir = &root
 	lines := make([]string, 0)
 	for scanner.Scan() {
@@ -76,7 +76,7 @@ func day7(filename string) int {
 				} else {
 					for _, child := range currentDir.children {
 						if child.name == destination {
-							currentDir = &child
+							currentDir = child
 							break
 						}
 					}
@@ -88,16 +88,20 @@ func day7(filename string) int {
 				for i = i + 1; !isCommand(lines[i]); i++ {
 					if isDirectory(lines[i]) {
 						child := Directory{name: strings.Split(lines[i], " ")[1],
-							parent: currentDir, children: make([]Directory, 0),
+							parent: currentDir, children: make([]*Directory, 0),
 							files: 0}
-						currentDir.addChild(child)
+						currentDir.addChild(&child)
 						fmt.Println("I added directory " + child.name + " to " + currentDir.name)
 					} else {
 						// it's a file
+						oldSize := int64(currentDir.files)
 						fileName := strings.Split(lines[i], " ")[1]
 						fileSize, _ := strconv.Atoi(strings.Split(lines[i], " ")[0])
 						currentDir.addFile(fileSize)
+						newSize := int64(currentDir.files)
 						fmt.Println("I added file " + fileName + " to " + currentDir.name)
+						fmt.Println("its size increased from " + strconv.FormatInt(oldSize, 10) +
+							" to " + strconv.FormatInt(newSize, 10))
 					}
 				}
 
