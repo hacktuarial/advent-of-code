@@ -22,7 +22,6 @@ def count_right(mat, i, j):
 
 def count_up(mat, i, j):
     k = 1
-    n_rows = len(mat)
     for k in range(1, i + 1):
         if mat[i - k][j] >= mat[i][j]:
             break
