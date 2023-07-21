@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -13,6 +12,13 @@ import (
 type move struct {
 	direction string
 	magnitude int
+}
+
+func absValue(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 type point struct {
@@ -29,22 +35,26 @@ func getMoves(filename string) []move {
 	scanner := bufio.NewScanner(file)
 	moves := make([]move, 0)
 	for scanner.Scan() {
-		txt := strings.Split(scanner.Text(), "")
+		txt := strings.Split(scanner.Text(), " ")
 		mag, _ := strconv.Atoi(txt[1])
+		if mag == 0 {
+			panic(scanner.Text())
+		}
 		moves = append(moves, move{direction: txt[0], magnitude: mag})
 	}
 	return moves
 }
 
-func addIfNotPresent(visited []point, new point) {
+func addIfNotPresent(visited []point, new point) []point {
 	for _, p := range visited {
 		if p.x == new.x && p.y == new.y {
-			return
+			return visited
 		}
 	}
 	visited = append(visited, new)
-	fmt.Println("tail has visited this many points:")
-	fmt.Println(len(visited))
+	// fmt.Println("tail has visited this many points:")
+	// fmt.Println(len(visited))
+	return visited
 }
 
 func moveRight(p point) point {
@@ -60,6 +70,20 @@ func moveDown(p point) point {
 	return point{x: p.x, y: p.y - 1}
 }
 
+func formatPoint(p point) string {
+	out := "("
+	out += strconv.FormatInt(int64(p.x), 10)
+	out += ","
+	out += strconv.FormatInt(int64(p.y), 10)
+	out += ")"
+	return out
+}
+func formatMove(m move) string {
+	out := m.direction + " "
+	out += strconv.FormatInt(int64(m.magnitude), 10)
+	return out
+}
+
 func part1(filename string) int {
 	directions := make(map[string]func(point) point)
 	directions["L"] = moveLeft
@@ -67,85 +91,74 @@ func part1(filename string) int {
 	directions["D"] = moveDown
 	directions["U"] = moveUp
 
-	visited := make([]point, 0)
+	visited := make([]point, 1)
+	visited = addIfNotPresent(visited, point{x: 0, y: 0})
 	head := point{x: 0, y: 0}
 	tail := point{x: 0, y: 0}
 	moves := getMoves(filename)
 	var diff [2]int
 	for _, mv := range moves {
+		fmt.Println(formatMove(mv))
 		for i := 0; i < mv.magnitude; i++ {
 			head = directions[mv.direction](head)
+			fmt.Println("head is at " + formatPoint(head) + ", tail is at" + formatPoint(tail))
+			diff[0] = head.x - tail.x
+			diff[1] = head.y - tail.y
+			totalDiff := absValue(diff[0]) + absValue(diff[1])
+			switch totalDiff {
+			case 0:
+				// tail and head are in the same place
+				continue
+			case 1:
+				// tail is close enough to head. don't move it
+				continue
+			case 2:
+				// (+/- 1, +/- 1) or (+/- 2, 0) or (0, +/- 2)
+				if absValue(diff[1]) == 1 {
+					// tail is close enough to head. don't move it
+					continue
+				} else {
+					if diff[0] == 2 {
+						tail = moveRight(tail)
+					} else if diff[0] == -2 {
+						tail = moveLeft(tail)
+					} else if diff[1] == 2 {
+						tail = moveUp(tail)
+					} else if diff[1] == -2 {
+						tail = moveDown(tail)
+					} else {
+						panic("not possible")
+					}
+				}
+			case 3:
+				// has to be a diagonal move
+				if diff[0] > 0 {
+					tail = moveRight(tail)
+				} else {
+					tail = moveLeft(tail)
+				}
+				if diff[1] > 0 {
+					tail = moveUp(tail)
+				} else {
+					tail = moveDown(tail)
+				}
+			default:
+				panic("not possible")
+			}
+			visited = addIfNotPresent(visited, tail)
+			fmt.Println("after moving, tail is at " + formatPoint(tail))
 		}
-		diff[0] = head.x - tail.x
-		diff[1] = head.y - tail.y
-		switch diff {
-		// two away, in a straight line
-		case [2]int{-2, 0}:
-			tail = moveLeft(tail)
-		case [2]int{2, 0}:
-			tail = moveRight(tail)
-		case [2]int{0, 2}:
-			tail = moveUp(tail)
-		case [2]int{0, -2}:
-			tail = moveDown(tail)
-		// 1 away, or on the same point: do nothing
-		case (math.Abs(diff[0])+math.Abs(diff[1]) <= 1):
-			// do nothing
-		// diagonal
-		case [2]int{-1, 2}:
-			tail = moveUp(moveLeft(tail))
-		case [2]int{1, 2}:
-			tail = moveUp(moveRight(tail))
-		case [2]int{-2, 1}:
-			tail = moveLeft(moveUp(tail))
-		case [2]int{2, 1}:
-			tail = moveRight(moveUp(tail))
-		case [2]int{-2, -1}:
-			tail = moveDown(moveLeft(tail))
-		case [2]int{2, -1}:
-			tail = moveDown(moveRight(tail))
-		case [2]int{-1, -2}:
-			tail = moveLeft(moveDown(tail))
-		case [2]int{1, -2}:
-			tail = moveDown(moveRight(tail))
-		default:
-			panic("This case is not covered")
-		}
-		addIfNotPresent(visited[:], tail)
+	}
+	for _, visit := range visited {
+		fmt.Println(formatPoint(visit))
 	}
 	return len(visited)
 }
 
-func part2(filename string) int {
-	matrix := buildMatrix(filename)
-	maxScenicScore := -1
-	for row := 1; row < len(matrix)-1; row++ {
-		for col := 1; col < len(matrix)-1; col++ {
-			score := scenicScore(matrix, row, col)
-			if score > maxScenicScore {
-				maxScenicScore = score
-			}
-		}
-
-	}
-	return maxScenicScore
-}
-
 func main() {
-	answer = part1("sample.txt")
+	answer := part1("sample.txt")
 	fmt.Println(answer)
 	fmt.Println("the answer to part 1 is ")
 	fmt.Println(part1("input.txt"))
 
-	if part2("sample.txt") != 8 {
-		panic("wrong answer to sample input for part2")
-	}
-	fmt.Println("the answer to part 2 is ")
-	fmt.Println(part2("input.txt"))
-
-	// how exactly do for loops work?
-	var k int
-	for k = 0; k < 10; k++ {
-	}
-	// after the loop, k==10
 }
