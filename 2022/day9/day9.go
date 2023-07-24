@@ -84,7 +84,7 @@ func formatMove(m move) string {
 	return out
 }
 
-func part1(filename string) int {
+func day9(filename string, nKnots int) int {
 	directions := make(map[string]func(point) point)
 	directions["L"] = moveLeft
 	directions["R"] = moveRight
@@ -93,62 +93,78 @@ func part1(filename string) int {
 
 	visited := make([]point, 1)
 	visited = addIfNotPresent(visited, point{x: 0, y: 0})
-	head := point{x: 0, y: 0}
-	tail := point{x: 0, y: 0}
+	knots := make([]point, 10, 10)
+	for i := 0; i < nKnots; i++ {
+		knots[i] = point{x: 0, y: 0}
+	}
 	moves := getMoves(filename)
 	var diff [2]int
 	for _, mv := range moves {
 		fmt.Println(formatMove(mv))
 		for i := 0; i < mv.magnitude; i++ {
-			head = directions[mv.direction](head)
-			fmt.Println("head is at " + formatPoint(head) + ", tail is at" + formatPoint(tail))
-			diff[0] = head.x - tail.x
-			diff[1] = head.y - tail.y
-			totalDiff := absValue(diff[0]) + absValue(diff[1])
-			switch totalDiff {
-			case 0:
-				// tail and head are in the same place
-				continue
-			case 1:
-				// tail is close enough to head. don't move it
-				continue
-			case 2:
-				// (+/- 1, +/- 1) or (+/- 2, 0) or (0, +/- 2)
-				if absValue(diff[1]) == 1 {
+			// move the head
+			knots[0] = directions[mv.direction](knots[0])
+			// now, move the tails one by one
+			for k := 1; k < nKnots; k++ {
+				// fmt.Println("head is at " + formatPoint(head) + ", tail is at" + formatPoint(tail))
+				// head is at k-1, tail is at k
+				diff[0] = knots[k-1].x - knots[k].x
+				diff[1] = knots[k-1].y - knots[k].y
+				totalDiff := absValue(diff[0]) + absValue(diff[1])
+				switch totalDiff {
+				case 0:
+					// tail and head are in the same place
+					continue
+				case 1:
 					// tail is close enough to head. don't move it
 					continue
-				} else {
-					if diff[0] == 2 {
-						tail = moveRight(tail)
-					} else if diff[0] == -2 {
-						tail = moveLeft(tail)
-					} else if diff[1] == 2 {
-						tail = moveUp(tail)
-					} else if diff[1] == -2 {
-						tail = moveDown(tail)
+				case 2:
+					// (+/- 1, +/- 1) or (+/- 2, 0) or (0, +/- 2)
+					if absValue(diff[1]) == 1 {
+						// tail is close enough to head. don't move it
+						continue
 					} else {
-						panic("not possible")
+						if diff[0] == 2 {
+							knots[k] = moveRight(knots[k])
+						} else if diff[0] == -2 {
+							knots[k] = moveLeft(knots[k])
+						} else if diff[1] == 2 {
+							knots[k] = moveUp(knots[k])
+						} else if diff[1] == -2 {
+							knots[k] = moveDown(knots[k])
+						} else {
+							panic("not possible (1)")
+						}
 					}
+				default:
+					// distance of 3+
+					// has to be a diagonal move
+					if diff[0] > 0 {
+						knots[k] = moveRight(knots[k])
+					} else {
+						knots[k] = moveLeft(knots[k])
+					}
+					if diff[1] > 0 {
+						knots[k] = moveUp(knots[k])
+					} else {
+						knots[k] = moveDown(knots[k])
+					}
+					// default:
+					// 	for j := 0; j < nKnots; j++ {
+					// 		fmt.Println(formatPoint(knots[j]))
+					// 	}
+					// 	panic("not possible (2)")
 				}
-			case 3:
-				// has to be a diagonal move
-				if diff[0] > 0 {
-					tail = moveRight(tail)
-				} else {
-					tail = moveLeft(tail)
+				if k == nKnots-1 {
+					fmt.Println("adding this point " + formatPoint(knots[k]))
+					// only track the last tail
+					visited = addIfNotPresent(visited, knots[k])
 				}
-				if diff[1] > 0 {
-					tail = moveUp(tail)
-				} else {
-					tail = moveDown(tail)
-				}
-			default:
-				panic("not possible")
+				// fmt.Println("after moving, tail is at " + formatPoint(tail))
 			}
-			visited = addIfNotPresent(visited, tail)
-			fmt.Println("after moving, tail is at " + formatPoint(tail))
 		}
 	}
+	fmt.Println("here are all of the points visited by the tail")
 	for _, visit := range visited {
 		fmt.Println(formatPoint(visit))
 	}
@@ -156,9 +172,20 @@ func part1(filename string) int {
 }
 
 func main() {
-	answer := part1("sample.txt")
-	fmt.Println(answer)
-	fmt.Println("the answer to part 1 is ")
-	fmt.Println(part1("input.txt"))
+	var answer int
+	// answer = day9("sample.txt", 2)
+	// fmt.Println(answer)
+	// fmt.Println("the answer to part 1 is ")
+	// answer = day9("input.txt", 2)
+	// if answer != 5858 {
+	// 	panic("wrong answer to part1")
+	// }
+
+	answer = day9("sample.txt", 10)
+	if answer != 1 {
+		panic("wrong answer to sample problem, part2")
+	}
+	fmt.Println("the answer to part 2 is")
+	fmt.Println(day9("input.txt", 10))
 
 }
